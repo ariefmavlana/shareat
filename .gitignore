@@ -31,3 +31,7 @@ Thumbs.db
 # Temporary review and export files
 *.tmp
 *.bak
+
+# Local development data and tooling
+.data/
+.local/

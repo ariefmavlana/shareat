@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1791015704638,
+      "tag": "0000_flowery_venom",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1791016831280,
+      "tag": "0001_same_epoch",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1791017707329,
+      "tag": "0002_odd_tana_nile",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1791022837031,
+      "tag": "0003_classy_next_avengers",
+      "breakpoints": true
+    }
+  ]
+}
