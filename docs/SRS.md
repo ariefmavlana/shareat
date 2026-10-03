@@ -1,6 +1,8 @@
 # SRS platform kemanusiaan Shareat
 
-**Versi:** 1.1 · **Tanggal:** 3 Oktober 2026 · **Status:** baseline dengan kontrak R1 hasil implementasi. Requirements di bawah harus dipenuhi sesuai kolom rilis; R2 tidak menjadi syarat mengaktifkan R1. Klarifikasi pemilik dan lingkup bisnis berada di [PRD](PRD.md). [SDD](SDD.md) memetakan implementasinya.
+**Versi:** 1.2 · **Tanggal:** 3 Oktober 2026 · **Status:** baseline dengan kontrak R1 hasil implementasi. Requirements di bawah harus dipenuhi sesuai kolom rilis; R2 tidak menjadi syarat mengaktifkan R1. Klarifikasi pemilik dan lingkup bisnis berada di [PRD](PRD.md). [SDD](SDD.md) memetakan implementasinya.
+
+Fondasi persistence mengikuti keputusan pemilik U-08: **PostgreSQL** (target18), melalui Drizzle/node-postgres; hosting menyediakan PostgreSQL atau akses database eksternal dengan TLS. Pilihan ini tidak mengubah batas R1 informasi/CMS/WhatsApp dan gate fundraising R2. Rincian schema, migration, hosting dan verifikasi ada pada [SDD](SDD.md) serta [ADR-22](DECISIONS.md).
 
 ## 1. Lingkup dan konvensi
 

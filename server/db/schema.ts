@@ -1,22 +1,22 @@
 import {
-  mysqlTable,
-  type AnyMySqlColumn,
+  pgTable,
+  type AnyPgColumn,
   varchar,
   text,
-  int,
+  integer,
   boolean,
-  json,
-  datetime,
+  jsonb,
+  timestamp,
   index,
   uniqueIndex,
-} from 'drizzle-orm/mysql-core'
+} from 'drizzle-orm/pg-core'
 import type {
   ContentBody,
   Checklist,
   ContentKind,
   RevisionState,
 } from '../../shared/contracts/content'
-export const organizations = mysqlTable('organizations', {
+export const organizations = pgTable('organizations', {
   id: varchar('id', { length: 36 }).primaryKey(),
   type: varchar('organization_type', { length: 20 })
     .$type<'team' | 'partner'>()
@@ -28,7 +28,7 @@ export const organizations = mysqlTable('organizations', {
   suspended: boolean('suspended').notNull().default(false),
   evidence: text('evidence'),
 })
-export const users = mysqlTable('users', {
+export const users = pgTable('users', {
   id: varchar('id', { length: 36 }).primaryKey(),
   organizationId: varchar('organization_id', { length: 36 })
     .notNull()
@@ -36,12 +36,16 @@ export const users = mysqlTable('users', {
   email: varchar('email', { length: 254 }).notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   mfaCipher: text('mfa_cipher').notNull(),
-  lastTotpStep: int('last_totp_step').notNull().default(0),
-  roles: json('roles').$type<string[]>().notNull(),
+  lastTotpStep: integer('last_totp_step').notNull().default(0),
+  roles: jsonb('roles').$type<string[]>().notNull(),
   suspended: boolean('suspended').notNull().default(false),
-  createdAt: datetime('created_at', { mode: 'date', fsp: 3 }).notNull(),
+  createdAt: timestamp('created_at', {
+    mode: 'date',
+    precision: 3,
+    withTimezone: true,
+  }).notNull(),
 })
-export const entities = mysqlTable(
+export const entities = pgTable(
   'content_entities',
   {
     id: varchar('id', { length: 36 }).primaryKey(),
@@ -50,10 +54,10 @@ export const entities = mysqlTable(
     organizationId: varchar('organization_id', { length: 36 })
       .notNull()
       .references(() => organizations.id),
-    version: int('version').notNull().default(1),
+    version: integer('version').notNull().default(1),
     publishedRevisionId: varchar('published_revision_id', {
       length: 36,
-    }).references((): AnyMySqlColumn => revisions.id),
+    }).references((): AnyPgColumn => revisions.id),
     everPublished: boolean('ever_published').notNull().default(false),
     archived: boolean('archived').notNull().default(false),
   },
@@ -63,15 +67,15 @@ export const entities = mysqlTable(
     index('owner_lookup').on(t.organizationId),
   ],
 )
-export const revisions = mysqlTable(
+export const revisions = pgTable(
   'content_revisions',
   {
     id: varchar('id', { length: 36 }).primaryKey(),
     entityId: varchar('entity_id', { length: 36 })
       .notNull()
       .references(() => entities.id),
-    sequence: int('sequence').notNull(),
-    body: json('body_json').$type<ContentBody>().notNull(),
+    sequence: integer('sequence').notNull(),
+    body: jsonb('body_json').$type<ContentBody>().notNull(),
     status: varchar('status', { length: 25 }).$type<RevisionState>().notNull(),
     authorId: varchar('author_id', { length: 36 })
       .notNull()
@@ -79,12 +83,16 @@ export const revisions = mysqlTable(
     reviewerId: varchar('reviewer_id', { length: 36 }).references(
       () => users.id,
     ),
-    checklist: json('checklist').$type<Checklist | null>(),
-    createdAt: datetime('created_at', { mode: 'date', fsp: 3 }).notNull(),
+    checklist: jsonb('checklist').$type<Checklist | null>(),
+    createdAt: timestamp('created_at', {
+      mode: 'date',
+      precision: 3,
+      withTimezone: true,
+    }).notNull(),
   },
   (t) => [uniqueIndex('entity_revision').on(t.entityId, t.sequence)],
 )
-export const sessions = mysqlTable(
+export const sessions = pgTable(
   'sessions',
   {
     hash: varchar('token_hash', { length: 64 }).primaryKey(),
@@ -92,20 +100,32 @@ export const sessions = mysqlTable(
       .notNull()
       .references(() => users.id),
     csrfHash: varchar('csrf_hash', { length: 64 }).notNull(),
-    expiresAt: datetime('expires_at', { mode: 'date', fsp: 3 }).notNull(),
-    idleAt: datetime('idle_at', { mode: 'date', fsp: 3 }).notNull(),
+    expiresAt: timestamp('expires_at', {
+      mode: 'date',
+      precision: 3,
+      withTimezone: true,
+    }).notNull(),
+    idleAt: timestamp('idle_at', {
+      mode: 'date',
+      precision: 3,
+      withTimezone: true,
+    }).notNull(),
   },
   (t) => [
     index('session_user').on(t.userId),
     index('session_expiry').on(t.expiresAt),
   ],
 )
-export const rateLimits = mysqlTable('rate_limit_buckets', {
+export const rateLimits = pgTable('rate_limit_buckets', {
   key: varchar('key_hash', { length: 64 }).primaryKey(),
-  count: int('count').notNull(),
-  expiresAt: datetime('expires_at', { mode: 'date', fsp: 3 }).notNull(),
+  count: integer('count').notNull(),
+  expiresAt: timestamp('expires_at', {
+    mode: 'date',
+    precision: 3,
+    withTimezone: true,
+  }).notNull(),
 })
-export const auditLogs = mysqlTable(
+export const auditLogs = pgTable(
   'audit_logs',
   {
     id: varchar('id', { length: 36 }).primaryKey(),
@@ -114,38 +134,46 @@ export const auditLogs = mysqlTable(
     targetId: varchar('target_id', { length: 100 }).notNull(),
     requestId: varchar('request_id', { length: 36 }).notNull(),
     reason: text('reason'),
-    safeChange: json('safe_change').$type<Record<string, unknown>>().notNull(),
-    createdAt: datetime('created_at', { mode: 'date', fsp: 3 }).notNull(),
+    safeChange: jsonb('safe_change').$type<Record<string, unknown>>().notNull(),
+    createdAt: timestamp('created_at', {
+      mode: 'date',
+      precision: 3,
+      withTimezone: true,
+    }).notNull(),
   },
   (t) => [index('audit_target').on(t.targetId, t.createdAt)],
 )
-export const settings = mysqlTable('settings', {
+export const settings = pgTable('settings', {
   key: varchar('setting_key', { length: 80 }).primaryKey(),
-  value: json('value_json').$type<Record<string, unknown>>().notNull(),
-  version: int('version').notNull().default(1),
+  value: jsonb('value_json').$type<Record<string, unknown>>().notNull(),
+  version: integer('version').notNull().default(1),
 })
-export const proposals = mysqlTable('change_proposals', {
+export const proposals = pgTable('change_proposals', {
   id: varchar('id', { length: 36 }).primaryKey(),
   kind: varchar('kind', { length: 40 }).notNull(),
   makerId: varchar('maker_id', { length: 36 })
     .notNull()
     .references(() => users.id),
-  payload: json('payload').$type<Record<string, unknown>>().notNull(),
+  payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
   status: varchar('status', { length: 20 }).notNull().default('pending'),
   checkerId: varchar('checker_id', { length: 36 }),
-  createdAt: datetime('created_at', { mode: 'date', fsp: 3 }).notNull(),
+  createdAt: timestamp('created_at', {
+    mode: 'date',
+    precision: 3,
+    withTimezone: true,
+  }).notNull(),
 })
-export const assets = mysqlTable('assets', {
+export const assets = pgTable('assets', {
   id: varchar('id', { length: 36 }).primaryKey(),
   organizationId: varchar('organization_id', { length: 36 })
     .notNull()
     .references(() => organizations.id),
   key: varchar('storage_key', { length: 100 }).notNull().unique(),
   mime: varchar('mime', { length: 80 }).notNull(),
-  bytes: int('bytes').notNull(),
+  bytes: integer('bytes').notNull(),
   sha256: varchar('sha256', { length: 64 }).notNull(),
-  width: int('width'),
-  height: int('height'),
+  width: integer('width'),
+  height: integer('height'),
   scanStatus: varchar('scan_status', { length: 20 }).notNull(),
   rightsStatus: varchar('rights_status', { length: 20 })
     .notNull()
@@ -155,30 +183,50 @@ export const assets = mysqlTable('assets', {
     .notNull()
     .references(() => users.id),
   approvedBy: varchar('approved_by', { length: 36 }),
-  createdAt: datetime('created_at', { mode: 'date', fsp: 3 }).notNull(),
+  createdAt: timestamp('created_at', {
+    mode: 'date',
+    precision: 3,
+    withTimezone: true,
+  }).notNull(),
 })
-export const outbox = mysqlTable('outbox_jobs', {
+export const outbox = pgTable('outbox_jobs', {
   id: varchar('id', { length: 36 }).primaryKey(),
   type: varchar('type', { length: 40 }).notNull(),
   entityId: varchar('entity_id', { length: 36 }).notNull(),
   status: varchar('status', { length: 20 }).notNull().default('pending'),
-  attempts: int('attempts').notNull().default(0),
-  availableAt: datetime('available_at', { mode: 'date', fsp: 3 }).notNull(),
-  leaseUntil: datetime('lease_until', { mode: 'date', fsp: 3 }),
+  attempts: integer('attempts').notNull().default(0),
+  availableAt: timestamp('available_at', {
+    mode: 'date',
+    precision: 3,
+    withTimezone: true,
+  }).notNull(),
+  leaseUntil: timestamp('lease_until', {
+    mode: 'date',
+    precision: 3,
+    withTimezone: true,
+  }),
   leaseOwner: varchar('lease_owner', { length: 36 }),
 })
 
-export const authChallenges = mysqlTable('auth_challenges', {
+export const authChallenges = pgTable('auth_challenges', {
   id: varchar('id', { length: 36 }).primaryKey(),
   tokenHash: varchar('token_hash', { length: 64 }).notNull().unique(),
   kind: varchar('kind', { length: 20 }).notNull(),
-  payload: json('payload').$type<Record<string, unknown>>().notNull(),
-  expiresAt: datetime('expires_at', { mode: 'date', fsp: 3 }).notNull(),
+  payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
+  expiresAt: timestamp('expires_at', {
+    mode: 'date',
+    precision: 3,
+    withTimezone: true,
+  }).notNull(),
   consumed: boolean('consumed').notNull().default(false),
 })
 
-export const redirects = mysqlTable('redirects', {
+export const redirects = pgTable('redirects', {
   fromPath: varchar('from_path', { length: 220 }).primaryKey(),
   toPath: varchar('to_path', { length: 220 }).notNull(),
-  createdAt: datetime('created_at', { mode: 'date', fsp: 3 }).notNull(),
+  createdAt: timestamp('created_at', {
+    mode: 'date',
+    precision: 3,
+    withTimezone: true,
+  }).notNull(),
 })

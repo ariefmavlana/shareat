@@ -8,7 +8,7 @@
 | --- | --- |
 | Runtime | Node 24 LTS, ESM, proses persisten, reverse proxy/port, dan restart yang dapat dikendalikan |
 | Resource | Baseline 1 GB memori tersedia untuk app, 2 GB preferensi; CPU, koneksi, inode dan disk harus lulus workload aktual |
-| Database | MySQL 8.4, InnoDB, utf8mb4, transactions, locking, FK, export/import; remote DB memakai TLS tervalidasi |
+| Database | PostgreSQL 18 supported, UTF8, JSONB, timestamptz, transactions/row locks/FK, pg_dump/pg_restore; TLS tervalidasi untuk produksi |
 | Media | Direktori persisten di luar document root, izin tulis terbatas, quota, backup, Sharp sesuai platform dan scanner AV |
 | Cron | CLI one-shot minimal setiap 5 menit, environment privat, concurrency dan timeout terukur |
 | Network | HTTPS/domain, outbound 443, proxy yang menghapus header forwarding palsu, request limits sesuai aplikasi |
@@ -16,7 +16,7 @@
 | Recovery | Backup DB/media/key harian, terenkripsi offsite, latihan restore RPO≤24 jam/RTO≤8 jam |
 | Monitoring | Probe eksternal, operator nyata, log redacted, resource quota, cron/backup age, dan dead letter alert |
 
-Label “Node support” belum membuktikan kelayakan paket. Jalankan spike dengan artifact aktual, termasuk restart setelah idle, SSR/API, MFA, DB locks, upload, cron, dan restore. Shared hosting tidak perlu Docker; Dockerfile membantu build Linux lokal. Adapter Passenger/cPanel baru ditentukan setelah topology host diketahui. PHP-only tidak dapat menjalankan backend Nuxt ini; pilih runtime Node atau revisi arsitektur melalui PR.
+Label “Node support” belum membuktikan kelayakan paket. Jalankan spike dengan artifact aktual, termasuk restart setelah idle, SSR/API, MFA, DB locks, upload, cron, dan restore. Shared hosting tidak perlu Docker; Dockerfile membantu build Linux lokal. Adapter Passenger/cPanel baru ditentukan setelah topology host diketahui. Paket hanya MySQL tidak memenuhi pilihan PostgreSQL. Gunakan PostgreSQL yang disediakan host atau layanan PostgreSQL eksternal dengan konektivitas/TLS, latency, quota, region dan biaya yang diuji. PHP-only tidak dapat menjalankan backend Nuxt ini; pilih runtime Node atau revisi arsitektur melalui PR.
 
 Pool DB 5 dan concurrency scrypt 2 membatasi beban, tetapi tidak menjamin kapasitas paket. Preview tidak menggunakan Redis/CDN cache. NFR-009 belum terbukti: target 50 request publik/detik mayoritas cache memerlukan implementasi cache, purge saat withdrawal, dan load test sebelum diterima.
 
@@ -39,12 +39,12 @@ Docker runtime memakai user node. Image menyediakan `/app/media` dengan izin tul
 
 ## Backup dan restore
 
-Backup produksi dibuat scheduler/provider yang disetujui dengan credential file privat atau secret manager. `mysqldump --single-transaction` dapat menjadi baseline InnoDB; sertakan schema/data, media checksum, encryption key, cutoff publikasi, dan prosedur restore. Offsite harus terenkripsi serta benar-benar diverifikasi; flag manual saja bukan bukti.
+Backup produksi dibuat scheduler/provider yang disetujui dengan credential file privat atau secret manager. `pg_dump --format=custom --no-owner --no-acl` menghasilkan snapshot konsisten PostgreSQL; restore dengan `pg_restore --exit-on-error --no-owner --no-acl` ke database baru terisolasi. Gunakan PostgreSQL client versi18 untuk server18, credential file/service privat (izin0600 atau ACL Windows setara), jangan password di argumen/log. Dump database tidak mencakup roles/grants cluster; dokumentasikan bootstrap principal terpisah; sertakan schema/data, media checksum, encryption key, cutoff publikasi, dan prosedur restore. Offsite harus terenkripsi serta benar-benar diverifikasi; flag manual saja bukan bukti.
 
 `npm run backup:check` memeriksa manifest: createdAt ISO UTC tidak future dan ≤24 jam, daftar file nonempty dengan SHA256, offsiteVerified=true, serta keberadaan/hash file lokal. Checker tidak melakukan upload, encryption, atau restore.
 
 ```json
-{"createdAt":"2026-10-03T00:00:00Z","offsiteVerified":true,"files":[{"path":"/private/backup/db.sql.enc","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]}
+{"createdAt":"2026-10-03T00:00:00Z","offsiteVerified":true,"files":[{"path":"/private/backup/db.dump.enc","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]}
 ```
 
 Contoh hanya menunjukkan format. Gunakan waktu dan hash hasil backup aktual. Latihan restore dilakukan pada DB/media terisolasi: periksa schema/FK/count/published pointer, decrypt MFA dengan key yang benar, jalankan auth/private/publication smoke, dan ukur cutoff RPO serta elapsed RTO. Restore produksi memerlukan freeze, approval, dan incident plan. Cabut session lama serta terapkan suppression terhadap identitas/media yang sudah ditarik agar tidak terpublikasi kembali.

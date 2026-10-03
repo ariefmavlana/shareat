@@ -1,6 +1,6 @@
 # SDD platform kemanusiaan Shareat
 
-**Versi:** 1.1 · **Tanggal:** 3 Oktober 2026 · **Status:** desain R1 diimplementasikan untuk preview; extension R2 dan readiness produksi masih rancangan/gate. Desain memenuhi baseline [SRS](SRS.md) melalui modular monolith fullstack Nuxt. R1 menjalankan website informasi, CMS, dan WhatsApp; modul keuangan R2 tetap belum aktif sampai gate terpenuhi.
+**Versi:** 1.2 · **Tanggal:** 3 Oktober 2026 · **Status:** desain R1 diimplementasikan untuk preview; extension R2 dan readiness produksi masih rancangan/gate. Desain memenuhi baseline [SRS](SRS.md) melalui modular monolith fullstack Nuxt. R1 menjalankan website informasi, CMS, dan WhatsApp; modul keuangan R2 tetap belum aktif sampai gate terpenuhi.
 
 Keputusan utama: satu codebase dan satu database transaksional dengan batas modul yang jelas, SSR untuk konten publik, shadcn-vue untuk UI, media public/private terpisah, serta external adapter untuk WhatsApp, storage, email dan gateway. Tidak ada kebutuhan awal untuk microservices, Kubernetes, Redis, atau worker daemon yang harus berjalan terus pada shared hosting.
 
@@ -9,12 +9,12 @@ Keputusan utama: satu codebase dan satu database transaksional dengan batas modu
 | Lapisan | Pilihan | Alasan dan pembatasan |
 | --- | --- | --- |
 | Framework | Nuxt 4 stable + Vue sesuai constraint Nuxt | Fullstack SSR, routing, server API, TypeScript; dokumentasi saat diperiksa menampilkan 4.5.2, patch implementasi dikunci setelah spike |
-| Runtime | Node 24 LTS preferensi; Node 22 LTS fallback sementara | Nuxt guide mensyaratkan 22.x+; fallback hanya jika versi dan EOL dipantau. Node yang EOL ditolak |
+| Runtime | Node 24 LTS (`>=24.11 <25`) | Engine proyek sudah dipin; minimum22 pada panduan Nuxt tidak menjadi runtime yang telah diuji |
 | Bahasa | TypeScript stable compatible, strict | Shared contracts, typed domain, validator runtime; tipe TS saja tidak memvalidasi input network |
 | UI | shadcn-vue, Reka UI, Lucide Vue | Komponen berada dalam repository dan dapat disesuaikan; dependency yang compatible dikunci; tidak memakai shadcn/ui React |
 | Styling | Tailwind CSS 4 dengan `@tailwindcss/vite` | Token CSS konsisten; jangan memasang konfigurasi plugin v3/v4 sekaligus |
 | Server | Nitro/H3 versi bawaan Nuxt; Node server preset | `.output/server/index.mjs`; kompatibilitas hosting/Passenger harus dibuktikan |
-| Data | MySQL 8.4 LTS target, InnoDB, utf8mb4 + Drizzle/mysql2 | SQL transactions, FK, unique constraint dan query yang dapat diaudit; DB provider dapat memerlukan versi berbeda yang masih supported dan lulus spike |
+| Data | PostgreSQL 18 + Drizzle/node-postgres | SQL transactions, FK, unique constraint dan query yang dapat diaudit; DB provider dapat memerlukan versi berbeda yang masih supported dan lulus spike |
 | Validation | Zod stable compatible | Schema request, domain policy, settings dan env; schema server sumber utama |
 | Auth | Opaque session database + Node crypto, TOTP library audited | Session revocable dan MFA staff; tidak menulis algoritma TOTP/crypto sendiri, tidak memerlukan provider auth eksternal |
 | Fetch/state | Nuxt `useFetch`/`useAsyncData`, server `$fetch`; local state | SSR request lifecycle; Pinia hanya jika kebutuhan state kompleks terbukti, hindari store global SSR untuk data personal |
@@ -24,7 +24,7 @@ Keputusan utama: satu codebase dan satu database transaksional dengan batas modu
 | Tooling | npm stable bawaan runtime + lockfile, ESLint Nuxt, formatter | Satu package manager; `npm ci` untuk instalasi deterministik; build lokal dalam lingkungan Linux yang sesuai produksi, tanpa GitHub Actions |
 | Observability | Log JSON + external uptime + error adapter | Vendor bebas konfigurasi, data sensitif dimasking |
 
-Daftar ini bukan klaim bahwa seluruh dependency patch terbaru sudah terpasang atau diuji. Spike menyimpan exact versions, lockfile, hasil build, licensing dan security audit. Beta/RC tidak menjadi baseline produksi. MySQL dan MariaDB tidak dipertukarkan tanpa migration/query/locking test; MariaDB supported dapat menjadi alternatif setelah ADR revisi. Prisma dan Nuxt Content bukan dependency wajib: CMS memakai relational DB agar tidak membuat kebutuhan build/filesystem ekstra di shared hosting.
+Daftar ini bukan klaim bahwa seluruh dependency patch terbaru sudah terpasang atau diuji. Spike menyimpan exact versions, lockfile, hasil build, licensing dan security audit. Beta/RC tidak menjadi baseline produksi. PostgreSQL adalah satu-satunya target persistence (U-08/ADR-22). MySQL/MariaDB bukan opsi substitusi; provider harus memenuhi gate PostgreSQL lokal atau eksternal. Prisma dan Nuxt Content bukan dependency wajib: CMS memakai relational DB agar tidak membuat kebutuhan build/filesystem ekstra di shared hosting.
 
 ## 2. Arsitektur sistem dan alur rilis
 
@@ -35,7 +35,7 @@ flowchart LR
   E --> N[Nuxt SSR dan Nitro API]
   N --> P[Konten dan CMS R1]
   N --> A[Identity dan settings]
-  P --> D[(MySQL)]
+  P --> D[(PostgreSQL)]
   A --> D
   P --> O[Storage public dan private]
   N --> L[Audit dan telemetry]
@@ -129,7 +129,7 @@ server/
   modules/media/            # inspeksi/scan/derivatives/private storage
   modules/contact/          # allowlist setting publik
   db/schema.ts              # schema R1
-  db/client.ts              # pool MySQL dan TLS
+  db/client.ts              # pool PostgreSQL dan TLS
   middleware/               # headers/request ID/redirect
   plugins/                  # CSP hashes dan log redacted
   routes/                   # sitemap/robots/media/legacy redirects/API404
@@ -137,7 +137,7 @@ server/
 shared/contracts/           # Zod dan DTO, tanpa secret
 scripts/                    # migrate, seed demo, staff, cron/preflight/backup
 drizzle/                  # lihat direktori drizzle: SQL migrations versioned
-tests/                     # unit dan E2E termasuk integrasi MySQL
+tests/                     # unit dan E2E termasuk integrasi PostgreSQL
 docs/                      # PRD/SRS/SDD/ledger/runbook
 ```
 
@@ -148,7 +148,7 @@ Handler melakukan schema parse, authenticate/authorize, memanggil service dan me
 
 ## 4. Model data dan constraint
 
-Semua tabel transactional memakai InnoDB dan UTC `DATETIME(3)`. ID `VARCHAR(36)` UUIDv4 dari crypto runtime; financial reference provider disimpan terpisah. Slug unique dengan indeks collation yang ditentukan; field nama/copy utf8mb4. R2 uang `BIGINT` integer IDR dan JSON string decimal agar aman lintas runtime. `version INT` untuk optimistic locking. Soft archive digunakan pada domain publik; ledger tidak hard delete.
+Semua tabel transactional memakai PostgreSQL dengan encoding UTF8, JSONB dan `TIMESTAMP(3) WITH TIME ZONE`; koneksi serta serialisasi API menggunakan UTC. ID `VARCHAR(36)` UUIDv4 dari crypto runtime; financial reference provider disimpan terpisah. Slug ASCII lowercase unique case-sensitive; email dinormalisasi lowercase sebelum query/insert. Field nama/copy mendukung Unicode UTF8. UUIDv4 disimpan VARCHAR(36) untuk mempertahankan identifier/API dan data preview; tipe UUID native bukan prasyarat. R2 uang `BIGINT` integer IDR dan JSON string decimal agar aman lintas runtime. `version INT` untuk optimistic locking. Soft archive digunakan pada domain publik; ledger tidak hard delete.
 
 ### Tabel R1 aktual
 
@@ -170,7 +170,9 @@ Source schema: [server/db/schema.ts](../server/db/schema.ts), SQL: [drizzle](../
 | rate_limit_buckets | Salted key hash/count/expiry, increment transactional, tidak menyimpan raw IP/email |
 | redirects | Unique fromPath, toPath, reviewer action audit; rewrite alias satu hop |
 
-Published revision FK melingkar ditambahkan pada migration0003 setelah kedua tabel tersedia. Service memilih revision dari entity yang sama; revision body tidak ditimpa saat status berubah. Public query memakai published pointer, bukan revisi terakhir. Private list memilih latest revision dan pagination20 di SQL, ownership mitra sebelum query; detail privat memuat riwayat. ProgramSlug pada body adalah relasi taxonomy logical yang diperiksa saat publish initiative, bukan FK JSON; tidak ada endpoint hard-delete program. Tidak ada finance, donor, memberships multi-org, asset_variants table atau privacy_requests table R1. Width derivatives disimpan dengan UUID-width key; retensi audit/privacy dan kontrol DBA/offsite tetap gate operasi.
+Published revision FK melingkar ditambahkan dengan ALTER TABLE pada migration PostgreSQL0000 setelah kedua tabel tersedia. Service memilih revision dari entity yang sama; revision body tidak ditimpa saat status berubah. Public query memakai published pointer, bukan revisi terakhir. Private list memilih latest revision dan pagination20 di SQL, ownership mitra sebelum query; detail privat memuat riwayat. ProgramSlug pada body adalah relasi taxonomy logical yang diperiksa saat publish initiative, bukan FK JSON; tidak ada endpoint hard-delete program. Tidak ada finance, donor, memberships multi-org, asset_variants table atau privacy_requests table R1. Width derivatives disimpan dengan UUID-width key; retensi audit/privacy dan kontrol DBA/offsite tetap gate operasi.
+
+Create dan perubahan slug mengambil `pg_advisory_xact_lock(hashtext('shareat-content-slug'))` sebelum row lock. Lock transaksi bersama ini menjaga alias yang belum mempunyai baris, dilepas otomatis saat commit/rollback; unique(kind,slug) tetap berlaku. Semua create/rename CMS terserialisasi singkat; public read dan edit body tidak memakai namespace lock. Jangan mengandalkan FOR UPDATE untuk nonexistent row pada PostgreSQL.
 
 Program, cerita, FAQ, halaman inti dan kebijakan mengikuti proses revision yang sama. Slug page yang berbenturan dengan route sistem ditolak422; duplikasi identitas/slug mendapat409. Custom page mempunyai route satu segmen dari slug published. Arsip privasi/ketentuan hanya menyajikan revision yang pernah published, noindex, dengan public DTO; draft dan withdrawn entity tidak dapat dibuka melalui arsip.
 
@@ -409,7 +411,7 @@ Cache R1 home/program/list maksimal60 detik, detail/story maksimal60 detik; stal
 
 Pada R2 status donation/receipt/API mutation uncached; financial public projection boleh30 detik dengan timestamp. CTA aktif tidak hanya bergantung cache page: server intent menilai active/jadwal/gate saat request. Penghapusan informasi berisiko tidak memakai stale-if-error; fail closed atau purge semua layer.
 
-DB connection pool awal5 koneksi per runtime, total instances×pool + cron/migration harus berada di bawah quota provider dengan reserve untuk admin. Index list `(program_id, published_revision_id, activity_status, created_at)`, slug unique, projection/cases/state/date sesuai query. Search title/ringkasan limit dan optional FULLTEXT diuji untuk Bahasa Indonesia; bukan membuat external search cluster sebelum volume membutuhkannya. Hindari N+1 dan membaca body/media full untuk list.
+DB connection pool awal5 koneksi per runtime, acquire/connect timeout10s, idle30s, statement15s, lock10s dan idle-in-transaction30s. Antrean acquire tidak mempunyai batas count khusus; timeout membatasi durasi, backpressure/request quota host tetap perlu diuji. Total instances×pool + cron/migration harus berada di bawah quota provider dengan reserve untuk admin. Index aktual: unique(kind,slug), (kind,published_revision_id), organization_id, unique(entity_id,sequence), session(user_id/expiry), dan audit(target_id,created_at). Filter body JSONB dan literal search memakai operator ->>/strpos dengan parameter terikat, belum mempunyai GIN/full-text index. PostgreSQL tsvector/GIN atau expression indexes merupakan opsi setelah query-plan/load test Bahasa Indonesia; bukan membuat external search cluster sebelum volume membutuhkannya. Hindari N+1 dan membaca body/media full untuk list.
 
 Baseline kapasitas diuji sesuai NFR; benchmark tidak berisi beneficiary/donor nyata. Jika CPU throttling/error/p95 melebihi target, kurangi dynamic render/cache safe dan optimalkan query; jangan membuka private cache demi performance. Upgrade trigger: resource mendekati quota>70% secara berkepanjangan, cron tertunda, DB connection shortage, backup tidak memenuhi RPO, atau availability target gagal. Persentase merupakan threshold usulan yang dievaluasi operator.
 
@@ -421,10 +423,10 @@ Evolusi: pindahkan object storage dari local protected files ke managed bucket l
 
 | Kemampuan | Minimum yang harus dibuktikan | Alasan |
 | --- | --- | --- |
-| Runtime | Node supported22+; prefer24; persistent SSR app, auto restart, health visibility | Fullstack tidak dapat dijalankan pada PHP-only |
+| Runtime | Node24 LTS sesuai engine proyek; persistent SSR app, auto restart, health visibility | Fullstack tidak dapat dijalankan pada PHP-only |
 | Entry/process | Mendukung artifact ESM Nitro Node-server atau integrasi Passenger yang lulus spike | Tombol Node pada panel bukan bukti kompatibilitas |
 | Resource | Anggaran desain ≥1 GB RAM proses tersedia dan quota CPU cukup untuk SSR/scrypt; 2 GB preferensi | Actual concurrency/hard limits harus lulus load test; bukan jaminan vendor |
-| DB | MySQL supported target8.4, InnoDB, FK/transaction, utf8mb4, minimal quota koneksi yang mencakup app+cron+ops | MariaDB perlu compatibility ADR/test |
+| DB | PostgreSQL supported target18, UTF8/JSONB/timestamptz, FK/transaction/row locks, minimal quota koneksi app+cron+ops | Paket harus menyediakan PostgreSQL atau mengizinkan DB eksternal dengan TLS tervalidasi |
 | Scheduling | Cron one-shot minimal setiap5 menit, DB lease, CLI runtime atau secure external scheduler | Outbox/cache/session/backup checks |
 | Network | HTTPS origin, outbound HTTPS443 ke storage/monitoring, reverse proxy benar, request limits configurable | WA link tidak perlu server call; CMS/operations tetap butuh external access |
 | Files/storage | Private directory di luar document root, write rights minimum, quota dan backup; public derivatives terpisah | Evidence tidak boleh tersaji statis publik |
@@ -439,7 +441,7 @@ R2 membutuhkan tambahan inbound webhook HTTPS443 tanpa challenge interaktif WAF,
 
 ### Spike kandidat hosting
 
-Uji artifact Nuxt SSR dan `/api` setelah deploy, restart dan idle; ESM startup/port binding/Passenger; env private; session MFA; mysql2 TLS jika remote; transaksi/locking/FK; media public/private dan authenticated download; cron lease; DB quota/load; public headers/sitemap; 404/410; logs; backup export dan restore. R2 tambah sandbox callback/outbound gateway, idempotency burst, RPO/PITR dan reconciliation recovery.
+Uji artifact Nuxt SSR dan `/api` setelah deploy, restart dan idle; ESM startup/port binding/Passenger; env private; session MFA; pg TLS jika remote; transaksi/locking/FK; media public/private dan authenticated download; cron lease; DB quota/load; public headers/sitemap; 404/410; logs; backup export dan restore. R2 tambah sandbox callback/outbound gateway, idempotency burst, RPO/PITR dan reconciliation recovery.
 
 cPanel Application Manager memerlukan komponen provider seperti Passenger; sumber [cPanel resmi](https://docs.cpanel.net/cpanel/software/application-manager/). Tidak menyediakan bootstrap wrapper ESM-to-CJS generik yang belum diuji. Jika panel mensyaratkan entry berbeda, adapter deployment ditulis setelah environment nyata diketahui dan hasil spike dicatat pada ADR.
 
@@ -484,7 +486,7 @@ R1 implementasi bertahap: spike stack/host → auth/schema/media → design syst
 
 ## 14. Status implementasi dan pilihan operasi preview
 
-Dependency exact ada di package.json/package-lock.json; Nuxt4.5.2/Vue3.5.43, shadcn-nuxt2.8.2/reka-ui2.10.5, Tailwind4.3.3, MySQL8.4/Drizzle0.45.3, Node24.19.0 diuji lokal. SSR dan API berada pada artifact node-server. Dockerfile menyediakan build Linux lokal dan runtime optional nonroot; shared hosting tidak wajib mendukung Docker.
+Dependency exact ada di package.json/package-lock.json; Nuxt4.5.2/Vue3.5.43, shadcn-nuxt2.8.2/reka-ui2.10.5, Tailwind4.3.3, PostgreSQL18.6/Drizzle0.45.3, Node24.19.0 diuji lokal. SSR dan API berada pada artifact node-server. Dockerfile menyediakan build Linux lokal dan runtime optional nonroot; shared hosting tidak wajib mendukung Docker.
 
 Preview sengaja memakai no-store pada seluruh halaman/API/media. Tidak ada public cache maupun CDN purge; pointer DB menentukan publikasi/withdrawal langsung. Cron publication_changed hanya mengakui event karena tidak ada cache eksternal. Cache untuk memenuhi workload NFR-009 merupakan pekerjaan berikutnya dengan uji purge sebelum aktif, bukan feature yang dianggap sudah ada. Endpoint telemetry/alert eksternal, offsite backup/restore, quota storage dan retensi privasi masih gate; log aplikasi dan manifest checker sendiri tidak memenuhi seluruh NFR.
 

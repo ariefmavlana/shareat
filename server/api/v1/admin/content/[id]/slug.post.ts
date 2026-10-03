@@ -5,6 +5,7 @@ import { slugSchema } from '../../../../../../shared/contracts/content'
 import { api, body } from '../../../../../utils/http'
 import { requireAuth } from '../../../../../utils/auth'
 import { database } from '../../../../../db/client'
+import { lockContentSlugs } from '../../../../../db/locks'
 import { entities, redirects, auditLogs } from '../../../../../db/schema'
 const schema = z
   .object({
@@ -17,6 +18,7 @@ export default api(async (event) => {
   const actor = await requireAuth(event, true, ['reviewer'])
   const input = await body(event, schema)
   return database().transaction(async (tx) => {
+    await lockContentSlugs(tx)
     const [row] = await tx
       .select()
       .from(entities)

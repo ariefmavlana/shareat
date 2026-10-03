@@ -1,28 +1,20 @@
-import { createPool } from 'mysql2/promise'
-import { drizzle, type MySql2Database } from 'drizzle-orm/mysql2'
+import { Pool } from 'pg'
+import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
+import { postgresPoolConfig } from './config'
 import * as schema from './schema'
-let pool: ReturnType<typeof createPool> | undefined
-let db: MySql2Database<typeof schema> | undefined
-export function database(url?: string): MySql2Database<typeof schema> {
+let pool: Pool | undefined
+let db: NodePgDatabase<typeof schema> | undefined
+export function database(url?: string): NodePgDatabase<typeof schema> {
   if (db) return db
   const uri = url ?? process.env.NUXT_DATABASE_URL
   if (!uri) throw new Error('Database belum dikonfigurasi')
-  pool = createPool({
-    uri,
-    connectionLimit: 5,
-    waitForConnections: true,
-    queueLimit: 50,
-    timezone: 'Z',
-    connectTimeout: 10000,
-    ssl:
-      process.env.NUXT_DATABASE_TLS === 'true'
-        ? {
-            rejectUnauthorized: true,
-            ca: process.env.NUXT_DATABASE_CA || undefined,
-          }
-        : undefined,
-  })
-  db = drizzle(pool, { schema, mode: 'default' })
+  pool = new Pool(postgresPoolConfig(uri))
+  pool.on('error', () =>
+    console.error(
+      JSON.stringify({ level: 'error', event: 'database_pool_error' }),
+    ),
+  )
+  db = drizzle(pool, { schema })
   return db
 }
 export async function closeDatabase() {

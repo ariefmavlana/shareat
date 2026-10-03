@@ -1,7 +1,8 @@
 # PRD platform kemanusiaan Shareat
 
-**Versi:** 1.1 · **Tanggal:** 3 Oktober 2026 · **Status:** baseline produk, dengan preview R1 dan gate produksi terpisah. Dokumen ini menetapkan arah produk. Aturan yang dapat diuji ada di [SRS](SRS.md), implementasi di [SDD](SDD.md), dan keputusan terbuka di [register](DECISIONS.md).
+**Versi:** 1.2 · **Tanggal:** 3 Oktober 2026 · **Status:** baseline produk, dengan preview R1 dan gate produksi terpisah. Dokumen ini menetapkan arah produk. Aturan yang dapat diuji ada di [SRS](SRS.md), implementasi di [SDD](SDD.md), dan keputusan terbuka di [register](DECISIONS.md).
 
+Fondasi persistence mengikuti keputusan pemilik U-08: **PostgreSQL** (target18), melalui Drizzle/node-postgres; hosting menyediakan PostgreSQL atau akses database eksternal dengan TLS. Pilihan ini tidak mengubah batas R1 informasi/CMS/WhatsApp dan gate fundraising R2. Rincian schema, migration, hosting dan verifikasi ada pada [SDD](SDD.md) serta [ADR-22](DECISIONS.md).
 Shareat ingin menjadi wadah berbagi untuk misi kemanusiaan di Indonesia. Fondasi produknya adalah membantu masyarakat memahami program, melihat siapa yang bertanggung jawab, dan berpartisipasi dengan langkah yang mudah. Peluncuran pertama memakai WhatsApp sebagai kanal menghubungi tim. Crowdfunding merupakan tahap selanjutnya, setelah badan hukum, izin, pengelolaan dana, dan payment gateway siap.
 
 ## 1. Konteks dan keputusan pemilik

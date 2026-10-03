@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { migrate } from 'drizzle-orm/mysql2/migrator'
+import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { database, closeDatabase } from '../server/db/client'
 try {
   await migrate(database(), { migrationsFolder: './drizzle' })

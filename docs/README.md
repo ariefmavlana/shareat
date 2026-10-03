@@ -2,7 +2,7 @@
 
 Paket ini menjelaskan produk, persyaratan perangkat lunak, dan rancangan sistem platform kemanusiaan Indonesia dengan program Share Eat, Share Knowledge, Share Book, serta program lain yang dapat ditambahkan. **R1** adalah website informasi dan transparansi dengan kontak WhatsApp. **R2** menambahkan penggalangan dana dan pembayaran setelah kesiapan legal, keuangan, serta gateway terpenuhi. Dokumen ditujukan kepada pemilik produk, desainer, pengembang, pengelola keuangan, dan operator. Nama Shareat merupakan nama kerja berdasarkan workspace; konfirmasi nama merek tercatat sebagai keputusan terbuka.
 
-**Versi:** 1.1 · **Tanggal acuan:** 3 Oktober 2026, Asia/Jakarta · **Status:** baseline produk dan implementasi preview R1; gate produksi belum seluruhnya terpenuhi.
+**Versi:** 1.2 · **Tanggal acuan:** 3 Oktober 2026, Asia/Jakarta · **Status:** baseline produk dan implementasi preview R1; gate produksi belum seluruhnya terpenuhi.
 
 ## Urutan membaca
 
@@ -24,7 +24,7 @@ Paket ini menjelaskan produk, persyaratan perangkat lunak, dan rancangan sistem 
 
 PRD mengatur tujuan dan lingkup. SRS menjadi sumber aturan bisnis, status, nilai konfigurasi usulan, dan kriteria penerimaan. SDD menjelaskan implementasi SRS. Perubahan aturan harus diperbarui pada ketiga dokumen dan matriks keterlacakan pada revisi yang sama. Keputusan eksternal yang belum diketahui tetap terlihat dalam register; tidak diganti dengan klaim kepastian.
 
-Fondasi yang diusulkan adalah **Nuxt 4, TypeScript, shadcn-vue, Tailwind CSS 4, Nitro, MySQL dengan Drizzle**, dan payment gateway melalui adapter. Versi yang diuji dikunci dalam package-lock.json; dependency audit dan uji hosting tetap menjadi gate. Nuxt fullstack hanya dapat ditempatkan pada shared hosting yang mendukung aplikasi Node.js dan kebutuhan operasionalnya. Hosting PHP saja memerlukan perubahan lokasi runtime atau arsitektur; menyalin hasil generate tidak menyediakan backend transaksi.
+Fondasi yang diusulkan adalah **Nuxt 4, TypeScript, shadcn-vue, Tailwind CSS 4, Nitro, PostgreSQL dengan Drizzle/node-postgres**, dan payment gateway melalui adapter. Versi yang diuji dikunci dalam package-lock.json; dependency audit dan uji hosting tetap menjadi gate. Nuxt fullstack hanya dapat ditempatkan pada shared hosting yang mendukung aplikasi Node.js dan kebutuhan operasionalnya. Hosting PHP saja memerlukan perubahan lokasi runtime atau arsitektur; menyalin hasil generate tidak menyediakan backend transaksi.
 
 Pemilik mengonfirmasi bahwa hanya tim Shareat dan mitra terverifikasi yang mengelola inisiatif, hosting belum dipilih sehingga memakai syarat minimum, serta badan hukum/izin dan gateway belum tersedia. Jalur awal adalah WhatsApp untuk reach out. R1 tidak menerima pembayaran di website dan tidak memindahkan ajakan pembayaran ke WhatsApp. Implementasi fullstack R1 tetap diperlukan untuk CMS, otorisasi admin, data program, serta audit publikasi.
 

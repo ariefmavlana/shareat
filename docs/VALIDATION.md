@@ -1,6 +1,6 @@
 # Laporan validasi dokumentasi Shareat
 
-**Tanggal acuan:** 3 Oktober 2026 · **Versi baseline:** 1.1
+**Tanggal acuan:** 3 Oktober 2026 · **Versi baseline:** 1.2
 
 Laporan ini memeriksa konsistensi struktural paket dokumentasi dan mencatat pemeriksaan editorial. Tidak menyatakan aplikasi, hosting, legalitas, atau pembayaran sudah diuji maupun siap produksi.
 
@@ -22,7 +22,7 @@ Laporan ini memeriksa konsistensi struktural paket dokumentasi dan mencatat peme
 
 ## Pemeriksaan konsistensi editorial
 
-- Klarifikasi pemilik tentang syarat minimum hosting, mitra terverifikasi, dan WA untuk tahap awal sudah dicantumkan dalam PRD/SRS/SDD/register.
+- Klarifikasi pemilik tentang syarat minimum hosting, mitra terverifikasi, PostgreSQL, dan WA untuk tahap awal sudah dicantumkan dalam PRD/SRS/SDD/register.
 - R1 informasi/CMS/WA dibedakan dari R2 fundraising; route pembayaran R1 tidak terdaftar, tidak ada pemindahan ajakan transfer ke WA.
 - Terms, sumber klaim, status kegiatan, published revision dan pembatasan private data memakai definisi yang sama.
 - URL inisiatif dipertahankan pada R2; 404/private, 410 withdrawn, canonical pagination, filter noindex, sitemap dan redirect sudah diselaraskan.

@@ -22,9 +22,10 @@
     "check": "npm run lint && npm run typecheck && npm test && npm run build",
     "jobs:run": "tsx scripts/maintenance.ts",
     "preflight": "tsx scripts/preflight.ts",
-    "format": "prettier --write app server shared scripts tests nuxt.config.ts drizzle.config.ts vitest.config.ts playwright.config.ts",
-    "format:check": "prettier --check app server shared scripts tests nuxt.config.ts drizzle.config.ts vitest.config.ts playwright.config.ts",
-    "backup:check": "tsx scripts/backup-check.ts"
+    "format": "prettier --write app server shared scripts tests nuxt.config.ts drizzle.config.ts vitest.config.ts playwright.config.ts vitest.integration.config.ts",
+    "format:check": "prettier --check app server shared scripts tests nuxt.config.ts drizzle.config.ts vitest.config.ts playwright.config.ts vitest.integration.config.ts",
+    "backup:check": "tsx scripts/backup-check.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@lucide/vue": "1.51.0",
@@ -32,7 +33,6 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "drizzle-orm": "0.45.3",
-    "mysql2": "3.24.5",
     "nuxt": "4.5.2",
     "otplib": "13.5.0",
     "reka-ui": "2.10.5",
@@ -43,7 +43,8 @@
     "vue-router": "5.3.1",
     "zod": "4.6.5",
     "h3": "1.15.11",
-    "ofetch": "1.5.1"
+    "ofetch": "1.5.1",
+    "pg": "8.23.1"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
@@ -60,6 +61,7 @@
     "typescript": "6.0.3",
     "vitest": "5.0.3",
     "vue-tsc": "3.3.12",
-    "prettier": "3.8.3"
+    "prettier": "3.8.3",
+    "@types/pg": "8.23.1"
   }
 }

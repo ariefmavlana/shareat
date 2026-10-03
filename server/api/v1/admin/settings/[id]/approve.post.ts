@@ -36,7 +36,8 @@ export default api(async (event) => {
       await tx
         .insert(settings)
         .values({ key: 'contact', value, version: 1 })
-        .onDuplicateKeyUpdate({
+        .onConflictDoUpdate({
+          target: settings.key,
           set: { value, version: sql`${settings.version} + 1` },
         })
     } else if (row.kind === 'organization') {

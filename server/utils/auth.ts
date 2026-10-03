@@ -33,7 +33,7 @@ export async function rateLimit(
         count: 0,
         expiresAt: new Date(Date.now() + windowMs),
       })
-      .onDuplicateKeyUpdate({ set: { key: hashed } })
+      .onConflictDoNothing({ target: rateLimits.key })
     const [r] = await tx
       .select()
       .from(rateLimits)

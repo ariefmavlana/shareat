@@ -1,6 +1,6 @@
 # Kontrak API R1 aktual
 
-**Versi:** 1.1 · **Tanggal:** 3 Oktober 2026. Prefix endpoint tabel adalah `/api/v1`, kecuali path absolut health/SEO/media. R1 hanya informasi/CMS/WA. Unknown `/api/*`, termasuk endpoint uang, mendapat404.
+**Versi:** 1.2 · **Tanggal:** 3 Oktober 2026. Prefix endpoint tabel adalah `/api/v1`, kecuali path absolut health/SEO/media. R1 hanya informasi/CMS/WA. Unknown `/api/*`, termasuk endpoint uang, mendapat404.
 
 ## HTTP, input, dan session
 

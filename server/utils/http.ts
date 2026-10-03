@@ -13,7 +13,7 @@ export const api = <T>(fn: (event: H3Event) => Promise<T>) =>
         depth < 4 && cause && typeof cause === 'object';
         depth++
       ) {
-        if ('code' in cause && cause.code === 'ER_DUP_ENTRY')
+        if ('code' in cause && cause.code === '23505')
           throw createError({
             statusCode: 409,
             statusMessage: 'Identitas atau slug sudah digunakan',

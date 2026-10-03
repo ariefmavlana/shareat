@@ -69,7 +69,8 @@ export default api(async (event) => {
         eq(users.lastTotpStep, row.user.lastTotpStep),
       ),
     )
-  if (result[0].affectedRows !== 1)
+    .returning({ id: users.id })
+  if (result.length !== 1)
     throw createError({
       statusCode: 401,
       statusMessage: 'Data masuk tidak valid',

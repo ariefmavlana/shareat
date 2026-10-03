@@ -46,7 +46,8 @@ async function login(email: string) {
   expect(response.status()).toBe(200)
   return { context, csrf: (await response.json()).csrf as string, usedOtp }
 }
-test.describe.serial('CMS with real MySQL, MFA and separate identities', () => {
+test.describe
+  .serial('CMS with real PostgreSQL, MFA and separate identities', () => {
   test.beforeAll(async () => {
     if (
       process.env.NUXT_APP_MODE !== 'demo' ||

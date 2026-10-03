@@ -1,6 +1,6 @@
 # Keterlacakan dan rencana penerimaan Shareat
 
-**Versi:** 1.1 · **Tanggal:** 3 Oktober 2026. Matriks menghubungkan tujuan [PRD](PRD.md), requirements [SRS](SRS.md), komponen [SDD](SDD.md), dan skenario penerimaan. TC adalah skenario penerimaan normatif. Bukti implementasi dan pengujian parsial R1 dipetakan pada [IMPLEMENTATION](IMPLEMENTATION.md); jumlah TC tidak sama dengan jumlah automated test dan tidak menyatakan seluruh TC lulus. Hasil pemeriksaan dokumen dicatat terpisah pada [VALIDATION](VALIDATION.md).
+**Versi:** 1.2 · **Tanggal:** 3 Oktober 2026. Matriks menghubungkan tujuan [PRD](PRD.md), requirements [SRS](SRS.md), komponen [SDD](SDD.md), dan skenario penerimaan. TC adalah skenario penerimaan normatif. Bukti implementasi dan pengujian parsial R1 dipetakan pada [IMPLEMENTATION](IMPLEMENTATION.md); jumlah TC tidak sama dengan jumlah automated test dan tidak menyatakan seluruh TC lulus. Hasil pemeriksaan dokumen dicatat terpisah pada [VALIDATION](VALIDATION.md).
 
 ## 1. Matriks kebutuhan fungsional
 
@@ -68,3 +68,7 @@
 - **Recovery:** restart host/lease expiry, retry email, backup restore/privacy suppression, ledger replay dan freeze/reopen tidak menghasilkan pembayaran/penyaluran baru yang tidak sah.
 
 Kriteria lulus aplikasi dicatat per rilis dengan actual environment/version, input, expected/actual, bukti output dan owner. Skema TC tidak menggantikan pengujian legal, accountant review, riset pengguna, atau due diligence mitra. Negative tests keuangan tidak menggunakan donor nyata atau uang nyata di environment staging.
+
+## Verifikasi persistence PostgreSQL
+
+U-08/ADR-22 dipetakan pada C-02/C-03/C-06/C-12 serta TC-003, TC-009, TC-011, TC-013, TC-014, TC-017, TC-043 dan TC-045. Unit konfigurasi dan suite [integrasi PostgreSQL](../tests/integration/postgres.test.ts) menguji TLS/URI, JSONB literal search/Unicode/order/demo, concurrent edit409, rollback publication, FK/unique, UTC milliseconds, upsert, CAS MFA, atomic rate limit, SKIP LOCKED, dan persaingan create/alias pada path yang belum ada. Bukti fresh migration, seed, cutover dan restore dicatat pada [IMPLEMENTATION](IMPLEMENTATION.md). Ini tidak menambah requirement baru atau menyatakan seluruh skenario TC tersebut telah selesai.

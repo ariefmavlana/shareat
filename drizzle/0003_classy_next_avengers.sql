@@ -1,1 +1,0 @@
-ALTER TABLE `content_entities` ADD CONSTRAINT `content_entities_published_revision_id_content_revisions_id_fk` FOREIGN KEY (`published_revision_id`) REFERENCES `content_revisions`(`id`) ON DELETE no action ON UPDATE no action;

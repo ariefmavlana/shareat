@@ -32,7 +32,7 @@ if (!config.success) {
       .where(
         and(
           eq(entities.archived, false),
-          sql`JSON_EXTRACT(${revisions.body}, '$.demo') = true`,
+          sql`${revisions.body}->>'demo' = 'true'`,
         ),
       )
       .limit(1)

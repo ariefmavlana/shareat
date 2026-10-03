@@ -6,7 +6,7 @@ import { database, closeDatabase } from '../server/db/client'
 import { users, organizations, settings, entities } from '../server/db/schema'
 import { hashPassword, encrypt } from '../server/modules/identity/crypto'
 import { ContentService } from '../server/modules/content/service'
-import { mysqlContentRepository } from '../server/modules/content/mysql-repository'
+import { postgresContentRepository } from '../server/modules/content/postgres-repository'
 import type {
   ContentBody,
   ContentKind,
@@ -64,7 +64,7 @@ try {
           evidence: 'Contoh ruang akses mitra; bukan mitra Shareat nyata.',
         },
       ])
-      .onDuplicateKeyUpdate({ set: { verified: true } })
+      .onConflictDoUpdate({ target: organizations.id, set: { verified: true } })
     const credentials = []
     for (const info of [
       {
@@ -122,8 +122,8 @@ try {
           ownershipVerified: true,
         },
       })
-      .onDuplicateKeyUpdate({ set: { key: 'contact' } })
-    const service = new ContentService(mysqlContentRepository())
+      .onConflictDoNothing({ target: settings.key })
+    const service = new ContentService(postgresContentRepository())
     const editor: Actor = {
       id: editorId,
       roles: ['editor'],
@@ -341,7 +341,7 @@ try {
         sortOrder: index,
       })
     console.log(
-      'Demo tersimpan di MySQL; kredensial dan enrollment lokal: .data/demo-access.json (tidak dilacak Git).',
+      'Demo tersimpan di PostgreSQL; kredensial dan enrollment lokal: .data/demo-access.json (tidak dilacak Git).',
     )
   }
 } finally {

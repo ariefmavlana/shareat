@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { and, eq, asc, isNotNull, sql, count, desc } from 'drizzle-orm'
 import { createError } from 'h3'
 import { database } from '../../db/client'
+import { lockContentSlugs } from '../../db/locks'
 import {
   entities,
   revisions,
@@ -62,7 +63,8 @@ async function writeRevisions(tx: Executor, record: ContentRecord) {
         sequence: index + 1,
         createdAt: new Date(rev.createdAt),
       })
-      .onDuplicateKeyUpdate({
+      .onConflictDoUpdate({
+        target: revisions.id,
         set: {
           status: rev.status,
           reviewerId: rev.reviewerId,
@@ -71,11 +73,12 @@ async function writeRevisions(tx: Executor, record: ContentRecord) {
         },
       })
 }
-export function mysqlContentRepository(): ContentRepository {
+export function postgresContentRepository(): ContentRepository {
   const db = database()
   return {
     async create(record, actor) {
       await db.transaction(async (tx) => {
+        await lockContentSlugs(tx)
         if (['program', 'initiative', 'story'].includes(record.kind)) {
           const base = (
             {
@@ -167,22 +170,19 @@ export function mysqlContentRepository(): ContentRepository {
       ]
       if (query.kind) clauses.push(eq(entities.kind, query.kind))
       if (process.env.NUXT_APP_MODE === 'production')
-        clauses.push(sql`JSON_EXTRACT(${revisions.body}, '$.demo') = false`)
+        clauses.push(sql`${revisions.body}->>'demo' = 'false'`)
       for (const [key, value] of [
         ['programSlug', query.program],
         ['activityStatus', query.status],
       ] as const)
-        if (value)
-          clauses.push(
-            sql`JSON_UNQUOTE(JSON_EXTRACT(${revisions.body}, ${'$.' + key})) = ${value}`,
-          )
+        if (value) clauses.push(sql`${revisions.body}->>${key} = ${value}`)
       if (query.lokasi)
         clauses.push(
-          sql`LOCATE(LOWER(${query.lokasi}), LOWER(JSON_UNQUOTE(JSON_EXTRACT(${revisions.body}, '$.location')))) > 0`,
+          sql`strpos(lower(coalesce(${revisions.body}->>'location', '')), lower(${query.lokasi})) > 0`,
         )
       if (query.q)
         clauses.push(
-          sql`LOCATE(LOWER(${query.q}),LOWER(CONCAT(JSON_UNQUOTE(JSON_EXTRACT(${revisions.body}, '$.title')), ' ', JSON_UNQUOTE(JSON_EXTRACT(${revisions.body}, '$.summary'))))) > 0`,
+          sql`strpos(lower(concat(${revisions.body}->>'title', ' ', ${revisions.body}->>'summary')), lower(${query.q})) > 0`,
         )
       const where = and(...clauses)
       const [result] = await db
@@ -203,7 +203,7 @@ export function mysqlContentRepository(): ContentRepository {
         .innerJoin(revisions, eq(entities.publishedRevisionId, revisions.id))
         .where(where)
         .orderBy(
-          sql`CAST(JSON_EXTRACT(${revisions.body}, '$.sortOrder') AS UNSIGNED)`,
+          sql`coalesce((${revisions.body}->>'sortOrder')::integer, 0)`,
           desc(revisions.createdAt),
           asc(entities.id),
         )

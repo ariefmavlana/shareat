@@ -4,11 +4,11 @@
 
 ## Instalasi
 
-Gunakan Node 24 LTS (`>=24.11 <25`), npm, Git, dan MySQL 8.4/InnoDB/utf8mb4. Periksa executable dengan `node --version`; Node25 di mesin bukan runtime proyek. Docker hanya diperlukan untuk database compose atau build Linux container.
+Gunakan Node 24 LTS (`>=24.11 <25`), npm, Git, dan PostgreSQL 18.6/UTF8. Periksa executable dengan `node --version`; Node25 di mesin bukan runtime proyek. Docker hanya diperlukan untuk database compose atau build Linux container.
 
 1. Salin `.env.example` menjadi `.env`. PowerShell: `Copy-Item .env.example .env`. Isi password database independen, URI dengan password URL-encoded, dan NUXT_ENCRYPTION_KEY64 hex dari32 byte random. Jangan commit secret.
 2. Set APP_MODE=demo dan SITE_URL=http://127.0.0.1:3001. Origin browser harus sama karena mutation memeriksa Origin.
-3. `npm ci`, `docker compose up -d db` atau sediakan MySQL sendiri. Compose bind DB ke127.0.0.1:33067 dengan volume persisten. Jangan menghapus volume yang berisi edit CMS.
+3. `npm ci`, `docker compose up -d postgres` atau sediakan PostgreSQL sendiri. Compose bind DB ke127.0.0.1:33068 dengan volume persisten. Jangan menghapus volume yang berisi edit CMS.
 4. `npm run db:migrate`, kemudian `npm run db:seed`. Seed hanya demo, membuat akses/konten sekali, dan tidak menimpa hasil edit.
 5. `npm run dev -- --port 3001`. Untuk artifact, hentikan dev sebelum `npm run build`; build dan dev yang berbagi `.nuxt` tidak diuji bersamaan.
 
@@ -18,16 +18,16 @@ PowerShell artifact: `$env:HOST='127.0.0.1'; $env:PORT='3001'; node --env-file=.
 
 | Key | Kontrak |
 | --- | --- |
-| NUXT_DATABASE_URL | Secret URI MySQL; pool5, queue50, connect timeout10s, UTC |
-| MYSQL_PASSWORD / MYSQL_ROOT_PASSWORD | Compose lokal, tidak masuk DTO publik |
+| NUXT_DATABASE_URL | Secret URI PostgreSQL; pool5, acquire/connect timeout10s, idle30s, statement15s, lock10s, idle transaction30s, UTC |
+| POSTGRES_PASSWORD | Compose lokal, tidak masuk DTO publik |
 | NUXT_ENCRYPTION_KEY | Independent 32-byte hex, AES-GCM MFA/salted rate key; backup privat dengan SOP recovery |
 | NUXT_APP_MODE | demo atau production; keduanya hanya R1 |
 | NUXT_SITE_URL | Origin canonical/CSRF; produksi HTTPS/domain yang disetujui |
-| NUXT_DATABASE_TLS / NUXT_DATABASE_CA | Remote DB memakai certificate validation, optional CA PEM; tidak ada insecure bypass |
+| NUXT_DATABASE_TLS / NUXT_DATABASE_CA | Remote DB dan seluruh produksi memakai certificate validation, optional CA PEM; parameter URI ssl* ditolak agar tidak menimpa verifikasi. Non-TLS hanya loopback atau service compose postgres dalam demo |
 | NUXT_PROXY_TRUSTED | Defaultfalse; true hanya untuk proxy tepercaya yang menghapus forwarding header palsu |
 | NUXT_MEDIA_ROOT | Direktori privat persisten di luar document root, bukan artifact release |
 | NUXT_SCANNER_COMMAND | Path AV executable tetap, tanpa shell args; satu file path dan timeout30s; exit0 berarti clean |
-| DEMO_STAFF_PASSWORD | Optional seed lokal, default random tersimpan dalam file privat |
+| DEMO_STAFF_PASSWORD | Wajib untuk seed lokal, minimum16 karakter; tersimpan dalam file privat |
 | STAFF_EMAIL / STAFF_PASSWORD / STAFF_TEAM_NAME / STAFF_ROLES | CLI bootstrap privat; password≥16, hapus env setelah provisioning |
 | BACKUP_MANIFEST_PATH | Manifest offsite terverifikasi; checker bukan pembuat backup |
 | TEST_BASE_URL | Origin artifact E2E, default loopback3001; hanya demo |
@@ -54,6 +54,8 @@ Media: raw JPEG/PNG/WebP/PDF → inspeksi → AV → quarantine/clean/blocked �
 npm run lint
 npm run typecheck
 npm test
+# Dengan NUXT_DATABASE_URL ke DB lokal terisolasi berakhiran _test, mode demo:
+npm run test:integration
 npm run format:check
 npm run build
 # Jalankan artifact, lalu di terminal lain dengan origin dan DB demo terisolasi:
@@ -62,6 +64,8 @@ npm run test:e2e
 python docs/tools/validate_docs.py
 git diff --check
 ```
+
+Integration PostgreSQL memiliki guard URI loopback dan nama DB berakhiran `_test`; gunakan seed demo pada database terpisah. Test menguji JSONB/UTF8/timestamp, FK/unique, concurrent version, rollback, rate limit, CAS MFA, upsert, SKIP LOCKED dan race create/alias yang dilindungi advisory transaction lock. Jalankan migration dua kali untuk idempotensi dan `db:generate` untuk drift.
 
 E2E memodifikasi users/rate buckets/proposals/konten. Guard menolak production atau remote origin, tetapi operator tetap wajib memilih DB test yang benar. Jangan menguji data kerja yang perlu dipertahankan.
 
@@ -74,3 +78,7 @@ Schema baru: edit `server/db/schema.ts`, `npm run db:generate`, review SQL/snaps
 ## Workflow
 
 Inspect status → fetch → branch baru dari origin/main bila aman → Conventional Commit → local checks → staged diff/secret review → push branch → PRmain. Preserve perubahan orang lain. Jangan commit/forcepush main, menambahkan GitHub Actions, merge atau deploy tanpa otorisasi. Detail ada pada [CONTRIBUTING](../CONTRIBUTING.md).
+
+## Peralihan PostgreSQL pada preview
+
+U-08/ADR-22 mengganti MySQL sebelum PR implementasi pertama digabung. Migration lama adalah baseline preview yang belum dirilis; schema baru mempunyai migration PostgreSQL0000. Ini bukan migration in-place untuk MySQL. Data lokal diekspor privat, diimpor secara transactional ke database kosong dengan FK aktif (entity pointer diisi setelah revision), lalu diperiksa count/pointer dan kesetaraan payload. Akun/key tetap; session dan challenge aktif dicabut. SQL dump, JSON export, media, key dan volume lama tetap privat dan tidak masuk Git. Provider baru memakai migration PostgreSQL dari awal. Jangan menjalankan baseline ini pada DB produksi existing; cutover nyata membutuhkan rencana export/import, freeze, pemetaan tipe, verifikasi dan rollback terpisah.

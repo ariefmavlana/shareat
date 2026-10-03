@@ -1,19 +1,20 @@
 # Shareat
 
-Website informasi kemanusiaan Indonesia berbasis **Nuxt 4 fullstack, TypeScript, shadcn-vue, Tailwind 4, Nitro, MySQL 8.4 dan Drizzle**. Implementasi R1 mencakup website SSR, CMS privat, review publikasi, MFA, pengelolaan mitra, media privat, dan kontak WhatsApp.
+Website informasi kemanusiaan Indonesia berbasis **Nuxt 4 fullstack, TypeScript, shadcn-vue, Tailwind 4, Nitro, PostgreSQL 18.6 dan Drizzle**. Implementasi R1 mencakup website SSR, CMS privat, review publikasi, MFA, pengelolaan mitra, media privat, dan kontak WhatsApp.
 
-Preview memakai **data demo yang tersimpan di MySQL dan dapat diedit melalui CMS**, bukan daftar kegiatan statis. Nomor sementara dari pemilik adalah **087776734038** (`6287776734038`). Identitas, agenda, cerita, kebijakan, dan jam layanan masih contoh. Preview memiliki label demo serta noindex. R1 tidak menerima pembayaran; R2 menunggu gate legal, keuangan, dan gateway.
+Preview memakai **data demo yang tersimpan di PostgreSQL dan dapat diedit melalui CMS**, bukan daftar kegiatan statis. Nomor sementara dari pemilik adalah **087776734038** (`6287776734038`). Identitas, agenda, cerita, kebijakan, dan jam layanan masih contoh. Preview memiliki label demo serta noindex. R1 tidak menerima pembayaran; R2 menunggu gate legal, keuangan, dan gateway.
 
 ## Menjalankan lokal
 
-Gunakan Node **24 LTS** (`>=24.11 <25`), npm, dan MySQL 8.4. Docker Compose menyediakan database lokal opsional.
+Gunakan Node **24 LTS** (`>=24.11 <25`), npm, dan PostgreSQL 18.6. Docker Compose menyediakan database lokal opsional.
 
 ```sh
 cp .env.example .env
-# Isi password database, URL database, dan kunci enkripsi 32 byte dalam format hex.
+# Isi POSTGRES_PASSWORD, NUXT_DATABASE_URL, DEMO_STAFF_PASSWORD (minimum16),
+# dan NUXT_ENCRYPTION_KEY (32 byte dalam format hex).
 # Sesuaikan NUXT_SITE_URL dengan origin aplikasi, misalnya http://127.0.0.1:3001.
 npm ci
-docker compose up -d db
+docker compose up -d postgres
 npm run db:migrate
 npm run db:seed
 npm run dev -- --port 3001
@@ -27,6 +28,8 @@ Generate kunci dengan `node -e "console.log(require('node:crypto').randomBytes(3
 npm run lint
 npm run typecheck
 npm test
+# Pada DB PostgreSQL lokal berakhiran _test, mode demo:
+npm run test:integration
 npm run format:check
 npm run build
 # Jalankan artifact dengan environment tersuplai; bukan server dev.

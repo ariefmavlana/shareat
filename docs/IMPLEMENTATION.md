@@ -2,27 +2,31 @@
 
 **Versi:** 0.1.0 preview · **Tanggal:** 3 Oktober 2026 · **Branch:** feat/r1-platform-implementation.
 
-R1 informasi/CMS/WhatsApp sudah diimplementasikan dan diuji lokal. Data program, inisiatif, cerita, FAQ, halaman, kebijakan dan kontak disimpan di MySQL serta dapat diubah melalui kontrol publikasi. Nomor sementara pemilik6287776734038. Konten/identitas/jam contoh ditandai demo dan noindex. Ini bukan launch produksi atau pernyataan seluruh gate Must lulus. R2 tidak dibuat pada source/schema/API R1.
+R1 informasi/CMS/WhatsApp sudah diimplementasikan dan diuji lokal. Data program, inisiatif, cerita, FAQ, halaman, kebijakan dan kontak disimpan di PostgreSQL serta dapat diubah melalui kontrol publikasi. Nomor sementara pemilik6287776734038. Konten/identitas/jam contoh ditandai demo dan noindex. Ini bukan launch produksi atau pernyataan seluruh gate Must lulus. R2 tidak dibuat pada source/schema/API R1.
 
 ## Lingkungan dan bukti
 
-Node 24.19.0, MySQL 8.4 Docker, Nuxt 4.5.2, Vue 3.5.43, TypeScript 6.0.3, shadcn-nuxt2.8.2, reka-ui2.10.5, Tailwind 4.3.3, Drizzle 0.45.3/mysql2 3.24.5. Versi exact dan transitif dikunci package-lock.json. Browser Playwright Chromium 153; tidak dianggap bukti Safari/Firefox/perangkat WA nyata.
+Node 24.19.0, PostgreSQL 18.6 Docker, Nuxt 4.5.2, Vue 3.5.43, TypeScript 6.0.3, shadcn-nuxt2.8.2, reka-ui2.10.5, Tailwind 4.3.3, Drizzle 0.45.3/pg 8.23.1. Versi exact dan transitif dikunci package-lock.json. Browser Playwright Chromium 153; tidak dianggap bukti Safari/Firefox/perangkat WA nyata.
 
 | Pemeriksaan | Hasil aktual |
 | --- | --- |
-| npm run check | Lint max-warnings0, strict typecheck,16 unit test, dan artifact build berhasil |
+| npm run check | Lint max-warnings0, strict typecheck,18 unit test, dan artifact build berhasil |
 | npm run format:check | Semua source yang termasuk scope formatter lulus |
-| docker build --target runtime -t shareat-r1:local . | Build Linux Node 24.19.0 berhasil, runtime usernode dan private media writable |
-| TEST_BASE_URL=http://127.0.0.1:3002 npm run test:e2e | Artifact Linux dengan DB MySQL nyata; Lulus 12/12 dalam 36,4 detik pada artifact Linux, termasuk assertion console error/hydration |
+| docker build --target runtime -t shareat-r1:postgres . | Build Linux Node 24.19.0 berhasil, runtime usernode dan private media writable |
+| TEST_BASE_URL=http://127.0.0.1:3002 npm run test:e2e | Artifact Linux dengan DB PostgreSQL nyata; Lulus 12/12 dalam24,9 detik setelah hardening alias, termasuk assertion console error/hydration |
 | jobs:run / preflight | Cleanup/outbox one-shot berhasil; preflight menolak env demo secara sengaja (BLOCKED production HTTPS/mode/scanner) |
-| Migration0000..0003 | Diterapkan lokal; circular published-revision FK dan unique revision diuji |
-| Seed ulang | Tidak menimpa konten yang sudah ada; demo access tidak masuk Git |
-| Restore DB terisolasi | Dump/import ke shareat_restore_check: 2,59 detik;24 entity/31 revision, 0 broken published references. Bukan RPO/RTO atau offsite produksi |
+| Migration PostgreSQL0000 | Fresh DB diterapkan dua kali tanpa duplikasi;13 tabel, FK/index/JSONB/timestamptz; db:generate melaporkan no schema changes |
+| npm run test:integration |7/7 pada PostgreSQL18.6 fresh demo terisolasi; JSONB literal search/Unicode/order/demo, concurrent edit409, rollback, FK/unique, UTC/timeout, CAS MFA/upsert, rate limit atomik, SKIP LOCKED dan alias/create lock |
+| Seed fresh/ulang | Fresh17 entity/17 revision/3 user, 0 broken published pointers; seed ulang tidak menimpa konten atau akses existing; credential privat |
+| Cutover preview lokal |32 entity/47 revision/16 user dipindahkan;11 payload tabel sama dengan export setelah konversi boolean dan revocation challenge yang disengaja. Session lama dicabut; database/volume/dump lama dipertahankan privat |
+| Restore PostgreSQL terisolasi | pg_dump custom/no-owner/no-acl → pg_restore exit-on-error ke shareat_pg_restore_test; restore0,41 detik untuk32 entity/47 revision/16 user;0 broken pointer,11 payload cocok. Bukan RPO/RTO atau offsite produksi |
 | npm audit --json |15 advisori:11 high/4 moderate, exit nonzero; review/upstream fix tetap gate |
-| Audit registry manifest runtime |69 versi dependency artifact plus h3 bundled, graph 153 package;0 advisori terlapor. Bukan audit lengkap compiled code/SBOM atau pembuktian semua high tidak exploitable |
+| Audit registry manifest Linux runtime |74 versi package dalam manifest Linux termasuk h3 bundled, graph157 package; npm audit0 advisori. Lock audit dibuat pada Node24 Linux untuk native Sharp; bukan audit lengkap compiled code/SBOM atau pembuktian semua high tidak exploitable |
 | python docs/tools/validate_docs.py | Struktur requirement/traceability/link/inventaris; hasil di VALIDATION, tidak menjalankan app |
 
-Uji Linux awal menemukan503 upload karena direktori media nonroot belum writable; Dockerfile diperbaiki dan suite diulang. Test publish incomplete awal gagal, lalu service diperbaiki untuk responsibility/author/effectiveDate. Uji konsol juga menemukan mismatch noscript berisi elemen nav; fallback diganti teks yang mengarahkan ke footer anchor SSR dan assertion console error ditambahkan. Bukti lulus berasal dari rerun setelah perbaikan, bukan dari menghapus assertion.
+Riwayat perbaikan baseline sebelum PostgreSQL: uji Linux awal menemukan503 upload karena direktori media nonroot belum writable; Dockerfile diperbaiki dan suite diulang. Test publish incomplete awal gagal, lalu service diperbaiki untuk responsibility/author/effectiveDate. Uji konsol juga menemukan mismatch noscript berisi elemen nav; fallback diganti teks yang mengarahkan ke footer anchor SSR dan assertion console error ditambahkan. Bukti lulus berasal dari rerun setelah perbaikan, bukan dari menghapus assertion.
+
+Review PostgreSQL menemukan race create/alias pada path belum ada; regression test awal gagal karena create lolos. Namespace advisory transaction lock ditambahkan pada create dan rename sebelum row locks, kemudian7/7 integrasi lulus. Default PostgreSQL READ COMMITTED dipertahankan; lock namespace melindungi missing rows tanpa bergantung gap locking.
 
 Build berhasil dengan diagnostic dependency/tooling: Rolldown PLUGIN_TIMINGS, Vue/VueUse deprecated package export, dan komentar PURE Zod/scure yang diabaikan bundler. Tidak ada lint warning milik source aplikasi. Docker build metadata Git tidak tersedia karena .git tidak masuk context; commit/image digest harus dicatat saat release. Warna terminal Playwright melaporkan NO_COLOR/FORCE_COLOR, bukan warning source.
 
@@ -67,7 +71,11 @@ Label **implemented** berarti kontrol kode tersedia dan memiliki bukti lokal ter
 
 ## File dan alur utama
 
-[Content service](../server/modules/content/service.ts) mengatur ownership/lifecycle, [MySQL repository](../server/modules/content/mysql-repository.ts) memegang lock/version/audit/outbox, [schema](../server/db/schema.ts) memegang FK/index. [Auth](../server/utils/auth.ts) memeriksa session/CSRF, [crypto](../server/modules/identity/crypto.ts) menjaga password/MFA. [Media](../server/modules/media/service.ts) memeriksa bytes dan scan. [Tests](../tests/) memuat assertion; [API](API.md), [DEVELOPMENT](DEVELOPMENT.md), [OPERATIONS](OPERATIONS.md) menjelaskan kontrak dan reproduksi.
+[Content service](../server/modules/content/service.ts) mengatur ownership/lifecycle, [PostgreSQL repository](../server/modules/content/postgres-repository.ts) memegang lock/version/audit/outbox, [schema](../server/db/schema.ts) memegang FK/index. [Auth](../server/utils/auth.ts) memeriksa session/CSRF, [crypto](../server/modules/identity/crypto.ts) menjaga password/MFA. [Media](../server/modules/media/service.ts) memeriksa bytes dan scan. [Tests](../tests/) memuat assertion; [API](API.md), [DEVELOPMENT](DEVELOPMENT.md), [OPERATIONS](OPERATIONS.md) menjelaskan kontrak dan reproduksi.
+
+## Preservasi media preview
+
+Delapan metadata asset lama dipertahankan. Lima original yang tersedia pada direktori lama Windows/Linux cocok SHA256 dan disalin ke volume media preview persisten. Tiga original fixture lama sudah tidak tersedia pada source penyimpanan yang diperiksa; tidak dibuat media pengganti atau dipublikasikan. Semuanya tetap quarantine dan memerlukan re-upload/scan/rights sebelum dipakai. Kekurangan fixture ini dibedakan dari29 missing references HTML legacy pada VALIDATION. Backup DB tidak membuktikan kelengkapan media/key/offsite.
 
 ## Sisa pekerjaan yang menghalangi launch
 
