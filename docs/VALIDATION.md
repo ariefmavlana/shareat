@@ -1,6 +1,6 @@
 # Laporan validasi dokumentasi Shareat
 
-**Tanggal acuan:** 2 Oktober 2026 · **Versi baseline:** 1.0
+**Tanggal acuan:** 3 Oktober 2026 · **Versi baseline:** 1.2
 
 Laporan ini memeriksa konsistensi struktural paket dokumentasi dan mencatat pemeriksaan editorial. Tidak menyatakan aplikasi, hosting, legalitas, atau pembayaran sudah diuji maupun siap produksi.
 
@@ -10,10 +10,10 @@ Laporan ini memeriksa konsistensi struktural paket dokumentasi dan mencatat peme
 
 | Pemeriksaan | Hasil |
 | --- | --- |
-| Dokumen inti dan index | 7 dokumen utama; 15 berkas Markdown diperiksa termasuk index dan panduan kontribusi |
+| Dokumen inti dan index | 7 dokumen utama; 19 berkas Markdown diperiksa termasuk index dan panduan kontribusi |
 | Requirements | 47 ID unik: 35 FR dan 12 NFR |
 | Keterlacakan | 47 baris; 10 tujuan PRD dan 13 komponen SDD didefinisikan |
-| Penerimaan | 47 skenario TC unik, masih rencana aplikasi |
+| Penerimaan | 47 skenario TC unik; bukti aplikasi dicatat terpisah di IMPLEMENTATION.md |
 | Tautan lokal dan anchor | Target berkas dan heading Markdown diperiksa |
 | Aturan bisnis | 21 BR unik; scope NFR konsisten dengan matriks |
 | Sintaks dasar | Code fence seimbang, tidak ada penanda draft yang belum diselesaikan |
@@ -22,13 +22,13 @@ Laporan ini memeriksa konsistensi struktural paket dokumentasi dan mencatat peme
 
 ## Pemeriksaan konsistensi editorial
 
-- Klarifikasi pemilik tentang syarat minimum hosting, mitra terverifikasi, dan WA untuk tahap awal sudah dicantumkan dalam PRD/SRS/SDD/register.
+- Klarifikasi pemilik tentang syarat minimum hosting, mitra terverifikasi, PostgreSQL, dan WA untuk tahap awal sudah dicantumkan dalam PRD/SRS/SDD/register.
 - R1 informasi/CMS/WA dibedakan dari R2 fundraising; route pembayaran R1 tidak terdaftar, tidak ada pemindahan ajakan transfer ke WA.
 - Terms, sumber klaim, status kegiatan, published revision dan pembatasan private data memakai definisi yang sama.
 - URL inisiatif dipertahankan pada R2; 404/private, 410 withdrawn, canonical pagination, filter noindex, sitemap dan redirect sudah diselaraskan.
 - Kebijakan Rp0 fee merupakan usulan R2 dengan gate sumber biaya operator; kas, fund availability, settlement, payout dan dampak dipisahkan.
 - Target recovery R1/R2 dibedakan; shared hosting tidak diklaim memenuhi Node/PITR/cron sebelum spike.
-- Nomor versi patch package, lisensi media, organisasi/izin, nomor WA dan data kegiatan yang belum tersedia tetap berada dalam register keputusan.
+- Versi package terkunci dan nomor WA preview sudah tersedia; lisensi media, organisasi/izin, jam/operator serta konten produksi tetap berada dalam register keputusan.
 
 ## Temuan referensi lama
 
@@ -38,9 +38,9 @@ Inventaris [ASSET_INVENTORY.csv](ASSET_INVENTORY.csv) mengidentifikasi berkas se
 
 ## Batas dan pekerjaan berikutnya
 
-Tidak ada Nuxt app, uji browser aplikasi, load test hosting, sandbox gateway, restore produksi, review legal final, atau persetujuan accountant yang dijalankan pada pekerjaan dokumentasi ini. Struktur link/ID tidak membuktikan bebas gap semantik atau bug. Mermaid tersimpan sebagai source; rendering diagram di panel belum diverifikasi otomatis.
+Validator ini tidak menjalankan Nuxt atau uji browser. Source R1 dan hasil pemeriksaan aplikasi lokal tersedia di IMPLEMENTATION.md. Load test hosting, gateway, restore produksi, review legal final, dan persetujuan accountant belum dijalankan. Struktur link/ID tidak membuktikan bebas gap semantik atau bug. Mermaid tersimpan sebagai source; rendering diagram di panel belum diverifikasi otomatis.
 
-Owner perlu menyelesaikan [register keputusan dan gate](DECISIONS.md). Saat implementasi, eksekusi [skenario penerimaan](TRACEABILITY.md) sesuai rilis dan simpan bukti hasil aktual. Sumber resmi serta batas verifikasi tersedia pada [EVIDENCE](EVIDENCE.md).
+Owner perlu menyelesaikan [register keputusan dan gate](DECISIONS.md). Untuk penerimaan produksi, eksekusi [skenario penerimaan](TRACEABILITY.md) sesuai rilis dan simpan bukti hasil aktual. Sumber resmi serta batas verifikasi tersedia pada [EVIDENCE](EVIDENCE.md).
 
 ## Cara mereproduksi
 

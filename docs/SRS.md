@@ -1,6 +1,8 @@
 # SRS platform kemanusiaan Shareat
 
-**Versi:** 1.0 · **Tanggal:** 2 Oktober 2026 · **Status:** spesifikasi baseline usulan. Requirements di bawah harus dipenuhi sesuai kolom rilis; R2 tidak menjadi syarat mengaktifkan R1. Klarifikasi pemilik dan lingkup bisnis berada di [PRD](PRD.md). [SDD](SDD.md) memetakan implementasinya.
+**Versi:** 1.2 · **Tanggal:** 3 Oktober 2026 · **Status:** baseline dengan kontrak R1 hasil implementasi. Requirements di bawah harus dipenuhi sesuai kolom rilis; R2 tidak menjadi syarat mengaktifkan R1. Klarifikasi pemilik dan lingkup bisnis berada di [PRD](PRD.md). [SDD](SDD.md) memetakan implementasinya.
+
+Fondasi persistence mengikuti keputusan pemilik U-08: **PostgreSQL** (target18), melalui Drizzle/node-postgres; hosting menyediakan PostgreSQL atau akses database eksternal dengan TLS. Pilihan ini tidak mengubah batas R1 informasi/CMS/WhatsApp dan gate fundraising R2. Rincian schema, migration, hosting dan verifikasi ada pada [SDD](SDD.md) serta [ADR-22](DECISIONS.md).
 
 ## 1. Lingkup dan konvensi
 
@@ -8,7 +10,7 @@ R1 menyediakan informasi program, inisiatif, transparansi, CMS internal, serta k
 
 Setiap ID FR atau NFR mempunyai satu definisi normatif dan satu baris pada [matriks keterlacakan](TRACEABILITY.md). Nomor TC menunjuk skenario penerimaan yang perlu dijalankan saat implementasi; keberadaan skenario dalam dokumen tidak menyatakan pengujian aplikasi sudah dijalankan.
 
-Istilah `campaign` pada model data dapat menyimpan inisiatif R1, sedangkan fundraising berada pada extension R2. Identifier internal adalah UUID acak, slug adalah URL publik, seluruh waktu disimpan UTC, dan seluruh uang memakai integer rupiah IDR. User interface R1 memakai istilah inisiatif. Public activity status dan fundraising status adalah dua konsep berbeda.
+Model aktual R1 memakai `content_entities` dengan kind `initiative`; model campaign/fundraising tetap rancangan extension R2. Identifier internal adalah UUID acak, slug adalah URL publik, seluruh waktu disimpan UTC, dan seluruh uang memakai integer rupiah IDR. User interface R1 memakai istilah inisiatif. Public activity status dan fundraising status adalah dua konsep berbeda.
 
 ## 2. Aktor, batas sistem, dan hak akses
 
@@ -135,11 +137,11 @@ Payout: `proposed → approved → reserved → submitted → paid | failed`; st
 
 ## 7. Input, batas, dan error
 
-- Input teks judul 5–160 karakter, ringkasan ≤300, slug lowercase alfanumerik/dash ≤100; body maksimum 50.000 karakter terstruktur dan disanitasi. Link user hanya protokol yang diizinkan; script, iframe sembarang dan event handler ditolak.
+- Input R1: judul 3–140 karakter, ringkasan 15–320, slug lowercase alfanumerik/dash 2–100; 1–30 paragraf plain text, masing-masing 1–4.000 karakter; batas byte JSON tetap mengikat seluruh payload. Link user hanya protokol yang diizinkan; script, iframe sembarang dan event handler ditolak.
 - Email di R2 dinormalisasi secukupnya tanpa asumsi seluruh provider case insensitive local part; verifikasi untuk akses/claim, tidak untuk memaksa guest membuat akun. Nama publik maksimal 80 karakter, dimoderasi; tidak mengambil nama akun pembayaran sebagai alias publik.
-- Payload JSON normal maksimum 64 KB; CMS body maksimal 256 KB; upload batas pada FR-012. Besar webhook dibatasi 128 KB dan adapter disesuaikan payload vendor. Nilai tersebut usulan yang diuji saat integrasi.
+- Payload JSON R1 maksimum 128 KiB, termasuk CMS; upload batas pada FR-012. Besar webhook dibatasi 128 KB dan adapter disesuaikan payload vendor. Nilai tersebut usulan yang diuji saat integrasi.
 - Upload read failure, tipe palsu, virus/quarantine, quota penuh, dan scan unavailable tidak membuat objek publishable. Upload privat PDF hanya untuk staff, scan wajib sebelum akses lintas peran.
-- API memakai error `{code, message, requestId, fieldErrors?}`; tidak mengembalikan stack, query SQL, token atau payload provider. Status 400 syntax, 401 session, 403 permission, 404 absent/private/disabled, 409 concurrency/state, 422 validation, 429 rate limit, 503 dependency temporary.
+- API R1 memakai envelope error H3 `{statusCode, statusMessage, message?}` dan header `X-Request-Id`; pesan validasi generik tanpa echo input. UI memakai status HTTP, tidak bergantung format stack. tidak mengembalikan stack, query SQL, token atau payload provider. Status 400 syntax, 401 session, 403 permission, 404 absent/private/disabled, 409 concurrency/state, 422 validation, 429 rate limit, 503 dependency temporary.
 - Untuk objek milik pihak lain, API publik menampilkan 404 agar tidak mengungkap keberadaan. Endpoint admin dapat 403 sesuai kebutuhan operasional. Waktu expiry berasal server; countdown client hanya presentasi.
 
 ## 8. Requirements nonfungsional
@@ -149,7 +151,7 @@ Payout: `proposed → approved → reserved → submitted → paid | failed`; st
 | NFR-001 | R1/R2 | CWV field p75 LCP ≤2,5 s, INP ≤200 ms, CLS ≤0,1 per template dengan sampel cukup; sebelum field tersedia gunakan Lighthouse mobile median 3 run ≥90 performance, bukan pengganti INP field. HTML SSR TTFB p95 ≤800 ms untuk cached/public read pada profil kapasitas; API internal p95 ≤500 ms tanpa latensi gateway |
 | NFR-002 | R1/R2 | WCAG 2.2 AA pada alur utama: kontras normal ≥4,5:1, besar ≥3:1, UI/focus ≥3:1; keyboard lengkap, fokus tidak tertutup, label/error terhubung, screen reader dan zoom 200%/reflow 320 CSS px. Target UX sentuh ≥44×44 px; hasil axe dilengkapi pemeriksaan manual |
 | NFR-003 | R1/R2 | TLS, authorization semua mutation/private read, secure HttpOnly session cookie, CSRF/origin protection, MFA staff, hash password scrypt dengan parameter diuji, secret di server, CSP dan upload validation. Temuan security kritis/tinggi yang dapat dieksploitasi harus selesai sebelum rilis |
-| NFR-004 | R1/R2 | Minimisasi data dan private-by-default; masking log, bukti consent/basis pemrosesan, retensi terkonfigurasi, private media signed access ≤5 menit. Tidak ada email/phone/token di payload SSR publik, analytics, sitemap, OG atau cache CDN |
+| NFR-004 | R1/R2 | Minimisasi data dan private-by-default; masking log, bukti consent/basis pemrosesan, retensi terkonfigurasi, private media melalui stream berautentikasi pada setiap request, tanpa URL bearer publik. Tidak ada email/phone privat atau token pada SSR publik, analytics, sitemap, OG atau cache CDN; nomor kontak resmi yang disetujui boleh tampil melalui allowlist |
 | NFR-005 | R1/R2 | Responsive 320–1920 CSS px; uji Android Chrome, iOS Safari, desktop Chrome/Edge/Firefox pada versi yang mendukung Tailwind v4. Minimum Chrome 111, Safari 16.4, Firefox 128 menurut sumber resmi; WhatsApp in-app browser diuji terpisah. Perangkat lebih lama mendapat fallback kontak yang terbaca jika styling gagal |
 | NFR-006 | R1/R2 | Public content dan head SSR tanpa ketergantungan JS crawler; satu canonical per eligible page, status HTTP benar, sitemap hanya published canonical 200. Semua internal link publik valid; crawling preview/admin dibatasi akses; metadata noindex tidak bergantung hydration |
 | NFR-007 | R1/R2 | Sasaran availability R1 99,5% per bulan dari probe eksternal satu menit pada home/detail; downtime terencana tetap dilaporkan terpisah. Budget ini target desain, bukan SLA provider. R2 memerlukan sasaran 99,9% serta assessment host ulang sebelum aktivasi |
@@ -164,8 +166,8 @@ Payout: `proposed → approved → reserved → submitted → paid | failed`; st
 | Data | R1/R2 | Baseline usulan | Owner keputusan |
 | --- | --- | --- | --- |
 | Konten dan policy revision | Keduanya | Selama relevan + arsip keputusan; hukum/izin media dapat mengubah publikasi | Editorial/legal |
-| Session staff | Keduanya | Idle 30 menit, absolute 12 jam; session expired dibersihkan ≤7 hari | Security |
-| Reset/invite/MFA recovery | Keduanya | Token single use; reset 15 menit, invite 48 jam; recovery hash hingga dipakai/revoke | Security |
+| Session staff | Keduanya | Idle 30 menit, absolute 8 jam; session expired dibersihkan ≤7 hari | Security |
+| Reset/invite/MFA recovery | Keduanya | Token single use; enrollment 5 menit, invite 24 jam; recovery supervised 24 jam dan single use | Security |
 | Security log | Keduanya | 90 hari online; access audit 1 tahun usulan | Security/legal |
 | Analytics agregat R1 | R1 | 90 hari; IP mentah tidak disimpan pada event aplikasi | Product/privacy |
 | Raw webhook R2 | R2 | 90 hari terenkripsi/redacted; normalized event sepanjang kebutuhan ledger | Finance/privacy |
@@ -180,3 +182,11 @@ Retensi yang belum disahkan tidak boleh dipromosikan sebagai kepastian kebijakan
 R1 membutuhkan domain/site URL, nomor WA resmi aktif, jam layanan, dua identitas staff untuk review, narasi aktual, rights media, hosting lulus spike, DB/media backup, privacy policy dan operator. R2 menambah badan hukum/izin/cakupan, gateway account/callback, rekening settlement, biaya operasional, staff finance terpisah, policy refund, serta recovery yang memenuhi NFR R2.
 
 Definisi selesai dokumentasi: semua FR/NFR terhubung ke sasaran, komponen desain dan skenario uji; tautan lokal/reference audit valid; keputusan terbuka tercatat. Definisi selesai aplikasi: semua skenario rilis dilaksanakan, bukti hasil tercatat, gate sesuai [DECISIONS](DECISIONS.md) disetujui pihak berwenang, dan tidak ada requirement Must rilis tersebut yang diabaikan tanpa revisi baseline.
+
+## 11. Kontrak preview R1 dan batas penerimaan
+
+Pemilik mengizinkan konten dummy **dinamis** dan WA sementara `6287776734038`. Mode demo mempunyai banner dan noindex; nomor dapat digunakan untuk tindakan pengguna, jam layanan diberi label contoh. Seed verified pada organisasi demo hanya fixture akses, bukan klaim due diligence nyata. Mode production tidak mengembalikan snapshot demo dan menolak publish demo. Identitas tim/mitra, operator, domain, rights dan kebijakan aktual tetap gate.
+
+Implementasi membatasi satu organization per staff dengan beberapa role JSON tervalidasi. Partner hanya boleh mempunyai partner_editor dan mengedit initiative milik organisasi. Tim internal dapat mengelola lintas organisasi sesuai role. TOTP diverifikasi bersama password dalam satu request; full session hanya diterbitkan sesudah keduanya valid, OTP yang sudah dipakai ditolak. Recovery memakai dua admin berbeda yang bukan akun target, lalu reenrollment single use; persetujuan baru mencabut token target sebelumnya, penangguhan user/organisasi mencabut token terkait dan payload kredensialnya; aktivasi/enrollment dan pencabutan harus atomik terhadap operasi bersamaan; tidak menggunakan recovery code offline. [ADR implementasi](DECISIONS.md) mencatat pilihan ini.
+
+FR-018 ditunda pada preview: tidak ada tracker atau event analytics browser. FR-019 masih memerlukan penunjukan operator dan latihan SOP. FR-020/NFR operasional baru mempunyai kontrol aplikasi lokal; monitoring eksternal, load, restore, browser matrix dan review keamanan produksi belum dianggap lulus. Lihat [ledger penerimaan](IMPLEMENTATION.md). Perubahan ini tidak menurunkan target kualitas atau melepaskan gate produksi.

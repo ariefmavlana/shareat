@@ -1,6 +1,6 @@
 # Keterlacakan dan rencana penerimaan Shareat
 
-**Versi:** 1.0 · **Tanggal:** 2 Oktober 2026. Matriks menghubungkan tujuan [PRD](PRD.md), requirements [SRS](SRS.md), komponen [SDD](SDD.md), dan skenario penerimaan. Seluruh TC adalah **rencana pengujian aplikasi**, bukan hasil lulus. Hasil pemeriksaan dokumen dicatat terpisah pada [VALIDATION](VALIDATION.md).
+**Versi:** 1.2 · **Tanggal:** 3 Oktober 2026. Matriks menghubungkan tujuan [PRD](PRD.md), requirements [SRS](SRS.md), komponen [SDD](SDD.md), dan skenario penerimaan. TC adalah skenario penerimaan normatif. Bukti implementasi dan pengujian parsial R1 dipetakan pada [IMPLEMENTATION](IMPLEMENTATION.md); jumlah TC tidak sama dengan jumlah automated test dan tidak menyatakan seluruh TC lulus. Hasil pemeriksaan dokumen dicatat terpisah pada [VALIDATION](VALIDATION.md).
 
 ## 1. Matriks kebutuhan fungsional
 
@@ -18,7 +18,7 @@
 | FR-010 | P-05 | R1 | C-03 | TC-010 | Mitra verified submit scoped; organisasi lain/suspended ditolak, sessions revoked |
 | FR-011 | P-05 | R1 | C-02 | TC-011 | Self review denied, checklist missing denied; publish atomic; archive purge origin/CDN+sitemap |
 | FR-012 | P-03 | R1 | C-04 | TC-012 | MIME spoof/oversize/SVG/scan unavailable denied; rights+EXIF+private URL and object ACL checked |
-| FR-013 | P-10 | R1 | C-03 | TC-013 | Login/MFA/CSRF/session rotation/revoke/throttle/recovery; cross-org/private read denied |
+| FR-013 | P-10 | R1 | C-03 | TC-013 | Login/MFA/CSRF/session rotation/revoke/throttle/recovery; revoked/superseded tokens denied, concurrent lifecycle serialized; cross-org/private read denied |
 | FR-014 | P-05 | R1 | C-07 | TC-014 | Role/contact/publish/download logs complete and redacted; editor log mutation denied |
 | FR-015 | P-07 | R1 | C-06 | TC-015 | Inspect raw HTML/status/head/JSON-LD/sitemap/noindex; no JS crawler and no private data |
 | FR-016 | P-07 | R1 | C-06 | TC-016 | Native share denial/unsupported falls back copy canonical; OG public approved image loads |
@@ -68,3 +68,7 @@
 - **Recovery:** restart host/lease expiry, retry email, backup restore/privacy suppression, ledger replay dan freeze/reopen tidak menghasilkan pembayaran/penyaluran baru yang tidak sah.
 
 Kriteria lulus aplikasi dicatat per rilis dengan actual environment/version, input, expected/actual, bukti output dan owner. Skema TC tidak menggantikan pengujian legal, accountant review, riset pengguna, atau due diligence mitra. Negative tests keuangan tidak menggunakan donor nyata atau uang nyata di environment staging.
+
+## Verifikasi persistence PostgreSQL
+
+U-08/ADR-22 dipetakan pada C-02/C-03/C-06/C-12 serta TC-003, TC-009, TC-011, TC-013, TC-014, TC-017, TC-043 dan TC-045. Unit konfigurasi dan suite [integrasi PostgreSQL](../tests/integration/postgres.test.ts) menguji TLS/URI, JSONB literal search/Unicode/order/demo, concurrent edit409, rollback publication, FK/unique, UTC milliseconds, upsert, CAS MFA, atomic rate limit, SKIP LOCKED, dan persaingan create/alias pada path yang belum ada. Bukti fresh migration, seed, cutover dan restore dicatat pada [IMPLEMENTATION](IMPLEMENTATION.md). Ini tidak menambah requirement baru atau menyatakan seluruh skenario TC tersebut telah selesai.
