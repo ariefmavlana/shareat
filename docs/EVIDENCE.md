@@ -77,3 +77,13 @@ Nuxt 4 + Node 24 LTS adalah usulan fondasi, bukan hasil spike integrasi. TypeScr
 Tool MCP `load_workspace_dependencies` telah digunakan untuk memeriksa runtime pendukung. Pencarian tool yang tersedia tidak menemukan `resolve-library-id` atau `query-docs` Context7; verifikasi dialihkan ke web dengan sumber resmi. Context7 tidak diklaim telah dijalankan. Skill Context7 menjadi pedoman pemilihan sumber; skill Superpowers digunakan untuk standar dokumentasi teknis dan keterlacakan. Skill write-page dipakai untuk mutu prosa dan penyimpanan dokumentasi lokal sesuai konteks workspace.
 
 Sebagian endpoint Nuxt mengembalikan format Markdown yang tidak dapat dibuka oleh tool web. Panduan deployment dan installation diperoleh melalui hasil dokumentasi resmi yang berhasil diambil. Keterbatasan tersebut tidak diubah menjadi klaim uji runtime.
+
+## Bukti implementasi 3 Oktober 2026
+
+Versi exact tersedia pada [package.json](../package.json) dan lockfile; hasil runtime/test ada pada [IMPLEMENTATION](IMPLEMENTATION.md). Windows dan Linux Node24.19.0/MySQL8.4 telah diuji lokal. Penggunaan [shadcn-vue Nuxt](https://www.shadcn-vue.com/docs/installation/nuxt) memadukan shadcn-nuxt serta plugin Tailwind Vite. [Drizzle MySQL](https://orm.drizzle.team/docs/mysql/get-started-mysql) mendukung driver mysql2; proyek memakai versi stable yang dipin, bukan mengikuti contoh RC secara otomatis.
+
+Dokumentasi Nuxt deployment masih terkena batas content-type Markdown pada tool web; bukti build/start artifact diperoleh dari eksekusi lokal. Tidak mengklaim Context7 tersedia. MCP Codex dipakai untuk runtime/preview/artifact PR; skills Superpowers dan Context7 mengarahkan TDD serta sumber teknis resmi.
+
+Audit lockfile mencatat15 advisori (11 high/4 moderate), terutama rantai Nuxt CLI/listhen/node-forge, globby/micromatch/braces dan drizzle-kit/esbuild. Contoh sumber: [node-forge advisory](https://github.com/advisories/GHSA-86w9-cpqp-85rv), [braces advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm), [esbuild advisory](https://github.com/advisories/GHSA-67mh-4wv8-2f99). Builder hanya lokal, image runtime hanya artifact. Pemeriksaan registry atas69 versi package runtime+h3 tidak melaporkan advisori; ini tidak menggantikan audit compiled code, SBOM Linux lengkap, atau review exploitability sebelum produksi. Tidak melakukan force fix/downgrade major untuk menyembunyikan laporan.
+
+Logo kerja, ilustrasi icon, favicon dan OG pada public adalah asset baru dari kode proyek, bukan foto/font CharityPress. Inventaris legacy tetap rights-unverified. Scanner dan rights workflow tidak otomatis memberi izin atas referensi lama.

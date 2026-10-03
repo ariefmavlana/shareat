@@ -1,6 +1,6 @@
 # Keterlacakan dan rencana penerimaan Shareat
 
-**Versi:** 1.0 · **Tanggal:** 2 Oktober 2026. Matriks menghubungkan tujuan [PRD](PRD.md), requirements [SRS](SRS.md), komponen [SDD](SDD.md), dan skenario penerimaan. Seluruh TC adalah **rencana pengujian aplikasi**, bukan hasil lulus. Hasil pemeriksaan dokumen dicatat terpisah pada [VALIDATION](VALIDATION.md).
+**Versi:** 1.1 · **Tanggal:** 3 Oktober 2026. Matriks menghubungkan tujuan [PRD](PRD.md), requirements [SRS](SRS.md), komponen [SDD](SDD.md), dan skenario penerimaan. TC adalah skenario penerimaan normatif. Bukti implementasi dan pengujian parsial R1 dipetakan pada [IMPLEMENTATION](IMPLEMENTATION.md); jumlah TC tidak sama dengan jumlah automated test dan tidak menyatakan seluruh TC lulus. Hasil pemeriksaan dokumen dicatat terpisah pada [VALIDATION](VALIDATION.md).
 
 ## 1. Matriks kebutuhan fungsional
 

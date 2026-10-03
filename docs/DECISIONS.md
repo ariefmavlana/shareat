@@ -1,6 +1,6 @@
 # Keputusan asumsi dan risiko Shareat
 
-**Versi:** 1.0 · **Tanggal:** 2 Oktober 2026. Dokumen ini menyimpan keputusan yang telah disampaikan pemilik, usulan teknis, dan dependency yang perlu dibuktikan. Kolom owner adalah fungsi yang harus ditunjuk, bukan nama staf yang diasumsikan tersedia.
+**Versi:** 1.1 · **Tanggal:** 3 Oktober 2026. Dokumen ini menyimpan keputusan yang telah disampaikan pemilik, usulan teknis, dan dependency yang perlu dibuktikan. Kolom owner adalah fungsi yang harus ditunjuk, bukan nama staf yang diasumsikan tersedia.
 
 ## 1. Keputusan pemilik yang sudah diketahui
 
@@ -10,6 +10,7 @@
 | U-02 | Dokumentasikan syarat minimum hosting dahulu | Tidak mengklaim provider/paket terpilih; spike menjadi gate |
 | U-03 | Hanya tim Shareat dan mitra terverifikasi | Tidak ada self-service campaign publik; approval dan organization scope |
 | U-04 | Badan hukum/izin dan gateway belum tersedia | R2 deferred, tidak menerima pembayaran pada R1 |
+| U-07 | Preview WA 087776734038 dan konten dummy dinamis | DB-backed demo berlabel/noindex; identitas/jam/operator nyata tetap gate produksi |
 | U-05 | Awalnya WA untuk reach out | Kontak eksternal berbasis klik pengguna; bukan automated WA send atau manual payment flow |
 
 Keputusan tambahan U-06 pada 3 Oktober 2026: pemilik melarang penggunaan GitHub Actions. Workflow dihapus dan pemeriksaan dilakukan lokal dengan bukti pada PR. Konfigurasi proteksi main yang dituju tetap mewajibkan PR tanpa required check Actions; pengaturan server harus diverifikasi sebelum merge.
@@ -43,7 +44,7 @@ Jika keputusan berubah, buat ADR revisi dengan trigger, opsi, alasan, perubahan 
 | --- | --- | --- | --- | --- |
 | O-01 | Nama legal/merek, logo final dan domain | Shareat adalah nama kerja; logo Charity tidak dipakai | Product/brand | Sebelum public identity R1 |
 | O-02 | Provider/paket Node dan DB actual | Syarat minimum SDD, target Node24/MySQL8.4 | Engineering/operations | Sebelum deployment R1 |
-| O-03 | Nomor WA resmi, jam dan operator | Belum ada nomor; setting invalid menolak publish kontak | Product/support | Sebelum launch R1 |
+| O-03 | Nomor WA resmi, jam dan operator | Nomor sementara preview tersedia: 6287776734038; jam/operator/ownership produksi belum disahkan | Product/support | Sebelum launch R1 |
 | O-04 | Konten, tim/mitra aktual, wilayah dan agenda | Tiga program dari brief; kegiatan ditandai rencana sampai bukti tersedia | Editorial/program owner | Sebelum publish tiap konten |
 | O-05 | Lisensi foto, font, logo, consent dan bukti lokasi | Semua aset referensi belum diizinkan publikasi | Brand/privacy | Sebelum asset published |
 | O-06 | Dua staff untuk review dan recovery | Role sudah didesain, orang belum ditunjuk | Product/operations | Sebelum CMS publikasi R1 |
@@ -83,7 +84,7 @@ Register terbuka adalah dependency yang sengaja terlihat, bukan placeholder impl
 
 ## 5. Gate R1
 
-Semua item berikut memerlukan bukti actual pada saat implementasi, belum dinyatakan lulus:
+Gate berikut berlaku sebelum launch produksi. Sebagian kontrol aplikasi sudah diuji lokal; bukti dan batasnya ada pada [IMPLEMENTATION](IMPLEMENTATION.md), tanpa menyatakan seluruh gate lulus:
 
 - Identity/domain/nomor WA/jam/operator benar dan disetujui; pesan/preset tidak mengandung ajakan bayar atau data personal.
 - Konten tiga program, halaman inti, privacy/terms, dan media mempunyai sumber serta izin; empty state/rencana factual; tidak ada badge/angka fiktif.
@@ -102,3 +103,18 @@ Semua item berikut memerlukan bukti actual pada saat implementasi, belum dinyata
 - Pilot terbatas membuktikan rekonsiliasi end-to-end, receipts/guest access aman, bank/fee/ledger konsisten, dana tidak disalurkan tanpa clearance dan evidence.
 
 Tanggung jawab owner produk adalah menyetujui kebutuhan bisnis dan kebijakan. Pengembang membuktikan desain/implementasi, operator membuktikan recovery, finance membuktikan saldo/approval, dan legal membuktikan legal readiness. Tidak ada satu checkbox yang menggantikan semua fungsi tersebut.
+
+## 8. ADR hasil implementasi preview R1
+
+| ADR | Keputusan aktual | Konsekuensi dan status |
+| --- | --- | --- |
+| ADR-16 | `content_entities` + revision FK untuk lima jenis konten, satu organisasi per user dan roles JSON schema-validated | Mengurangi duplikasi CMS; ownership/private DTO tetap diperiksa. Tidak ada memberships multi-org atau tabel finance pada R1. Schema/migrations aktual menggantikan tabel R1 konseptual SDD |
+| ADR-17 | Password+TOTP satu request, OTP anti-replay, opaque session 8 jam/idle30m; pemulihan dua admin supervised | Tidak ada full session sebelum MFA, tidak ada offline recovery code. Token invite24h/enrollment5m/recovery24h; recovery mencabut sessions sebelum reenrollment |
+| ADR-18 | Tidak ada cache publik pada preview; semua konten/media dibaca dari pointer published saat request | Withdrawal langsung tanpa purge CDN; beban DB lebih tinggi. Cache dan workload50rps tidak diklaim selesai; jika cache ditambahkan wajib purge+test baru |
+| ADR-19 | Private media stream terautentikasi, raw upload bounded, scanner executable fixed dari config | Tidak menggunakan signed bearer URL. Tanpa scanner, file tetap quarantine; rights tidak dapat melewati scan. Linux native dependency/AV perlu host spike |
+| ADR-20 | Analytics non-esensial FR-018 deferred pada preview | Tidak ada tracker/consent-cookie palsu. Event aggregate hanya ditambahkan setelah purpose/retention serta acceptance disetujui |
+| ADR-21 | Konten demo editable dan nomor sementara sesuai U-07; prod menolak demo | Preview bukan bukti kegiatan nyata atau review legal. Gate produksi tetap blocking |
+
+Tanggal keputusan teknis: 3 Oktober 2026. Pilihan yang mengubah kontrak sudah diselaraskan pada SRS/SDD/API/traceability. Pemeriksaan lokal membuktikan bagian yang terukur; external operator/legal/hosting readiness tetap terbuka.
+
+Dependency audit preview: npm melaporkan 15 advisori transitif (11 high, 4 moderate). Tidak melakukan downgrade Nuxt major atau force audit fix tanpa compatibility review. [IMPLEMENTATION](IMPLEMENTATION.md) mencatat analisis artifact dan sisa risiko. NFR-003 menghalangi release bila temuan tinggi/kritis dapat dieksploitasi; review dependency serta upstream fix menjadi gate sebelum produksi.

@@ -154,7 +154,7 @@ def main() -> int:
         ("Dokumen inti dan index", f"{len(REQUIRED)} dokumen utama; {len(texts)} berkas Markdown diperiksa termasuk index dan panduan kontribusi"),
         ("Requirements", f"{len(definitions)} ID unik: 35 FR dan 12 NFR"),
         ("Keterlacakan", f"{len(rows)} baris; 10 tujuan PRD dan 13 komponen SDD didefinisikan"),
-        ("Penerimaan", f"{len(tests)} skenario TC unik, masih rencana aplikasi"),
+        ("Penerimaan", f"{len(tests)} skenario TC unik; bukti aplikasi dicatat terpisah di IMPLEMENTATION.md"),
         ("Tautan lokal dan anchor", "Target berkas dan heading Markdown diperiksa"),
         ("Aturan bisnis", f"{len(business_rules)} BR unik; scope NFR konsisten dengan matriks"),
         ("Sintaks dasar", "Code fence seimbang, tidak ada penanda draft yang belum diselesaikan"),
@@ -163,7 +163,7 @@ def main() -> int:
     ])
     report = [
         "# Laporan validasi dokumentasi Shareat", "",
-        "**Tanggal acuan:** 2 Oktober 2026 · **Versi baseline:** 1.0", "",
+        "**Tanggal acuan:** 3 Oktober 2026 · **Versi baseline:** 1.1", "",
         "Laporan ini memeriksa konsistensi struktural paket dokumentasi dan mencatat pemeriksaan editorial. Tidak menyatakan aplikasi, hosting, legalitas, atau pembayaran sudah diuji maupun siap produksi.", "",
         "## Hasil pemeriksaan otomatis", "",
         f"**Status: {'LULUS' if not errors else 'PERLU PERBAIKAN'}** · Error struktural: {len(errors)}.", "",
@@ -180,13 +180,13 @@ def main() -> int:
         "- URL inisiatif dipertahankan pada R2; 404/private, 410 withdrawn, canonical pagination, filter noindex, sitemap dan redirect sudah diselaraskan.",
         "- Kebijakan Rp0 fee merupakan usulan R2 dengan gate sumber biaya operator; kas, fund availability, settlement, payout dan dampak dipisahkan.",
         "- Target recovery R1/R2 dibedakan; shared hosting tidak diklaim memenuhi Node/PITR/cron sebelum spike.",
-        "- Nomor versi patch package, lisensi media, organisasi/izin, nomor WA dan data kegiatan yang belum tersedia tetap berada dalam register keputusan.",
+        "- Versi package terkunci dan nomor WA preview sudah tersedia; lisensi media, organisasi/izin, jam/operator serta konten produksi tetap berada dalam register keputusan.",
         "", "## Temuan referensi lama", "",
         "Audit menemukan file/route lokal yang dirujuk HTML tetapi tidak tersedia. Daftar lengkap: [LEGACY_MISSING_REFERENCES.csv](LEGACY_MISSING_REFERENCES.csv). Missing reference tidak diteruskan sebagai route aplikasi baru. Integrasi peta legacy dengan kunci tertanam dibersihkan sebelum publikasi GitHub; aset gambar tetap dipertahankan.",
         "", "Inventaris [ASSET_INVENTORY.csv](ASSET_INVENTORY.csv) mengidentifikasi berkas serta checksum, bukan izin penggunaan. Visual inspection terbatas pada logo.png, slide1.png dan causes_4.png; media lain belum semuanya diperiksa secara visual.",
         "", "## Batas dan pekerjaan berikutnya", "",
-        "Tidak ada Nuxt app, uji browser aplikasi, load test hosting, sandbox gateway, restore produksi, review legal final, atau persetujuan accountant yang dijalankan pada pekerjaan dokumentasi ini. Struktur link/ID tidak membuktikan bebas gap semantik atau bug. Mermaid tersimpan sebagai source; rendering diagram di panel belum diverifikasi otomatis.",
-        "", "Owner perlu menyelesaikan [register keputusan dan gate](DECISIONS.md). Saat implementasi, eksekusi [skenario penerimaan](TRACEABILITY.md) sesuai rilis dan simpan bukti hasil aktual. Sumber resmi serta batas verifikasi tersedia pada [EVIDENCE](EVIDENCE.md).", "",
+        "Validator ini tidak menjalankan Nuxt atau uji browser. Source R1 dan hasil pemeriksaan aplikasi lokal tersedia di IMPLEMENTATION.md. Load test hosting, gateway, restore produksi, review legal final, dan persetujuan accountant belum dijalankan. Struktur link/ID tidak membuktikan bebas gap semantik atau bug. Mermaid tersimpan sebagai source; rendering diagram di panel belum diverifikasi otomatis.",
+        "", "Owner perlu menyelesaikan [register keputusan dan gate](DECISIONS.md). Untuk penerimaan produksi, eksekusi [skenario penerimaan](TRACEABILITY.md) sesuai rilis dan simpan bukti hasil aktual. Sumber resmi serta batas verifikasi tersedia pada [EVIDENCE](EVIDENCE.md).", "",
         "## Cara mereproduksi", "", "Jalankan `python docs/tools/validate_docs.py` dari root workspace. Script menggunakan standard library; Pillow optional untuk membaca dimensi tambahan. Script hanya menulis inventaris/laporan di docs, tidak mengedit aset lama, mengirim pesan WA atau mengaktifkan transaksi.", "",
     ])
     report_path.write_text("\n".join(report), encoding="utf-8")

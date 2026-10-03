@@ -1,6 +1,6 @@
 # PRD platform kemanusiaan Shareat
 
-**Versi:** 1.0 · **Tanggal:** 2 Oktober 2026 · **Status:** usulan baseline berdasarkan brief dan tiga klarifikasi pemilik. Dokumen ini menetapkan arah produk. Aturan yang dapat diuji ada di [SRS](SRS.md), implementasi di [SDD](SDD.md), dan keputusan terbuka di [register](DECISIONS.md).
+**Versi:** 1.1 · **Tanggal:** 3 Oktober 2026 · **Status:** baseline produk, dengan preview R1 dan gate produksi terpisah. Dokumen ini menetapkan arah produk. Aturan yang dapat diuji ada di [SRS](SRS.md), implementasi di [SDD](SDD.md), dan keputusan terbuka di [register](DECISIONS.md).
 
 Shareat ingin menjadi wadah berbagi untuk misi kemanusiaan di Indonesia. Fondasi produknya adalah membantu masyarakat memahami program, melihat siapa yang bertanggung jawab, dan berpartisipasi dengan langkah yang mudah. Peluncuran pertama memakai WhatsApp sebagai kanal menghubungi tim. Crowdfunding merupakan tahap selanjutnya, setelah badan hukum, izin, pengelolaan dana, dan payment gateway siap.
 
@@ -14,7 +14,8 @@ Keputusan yang sudah diberikan pemilik:
 2. Hosting memakai syarat minimum terlebih dahulu; penyedia dan paket belum dipilih.
 3. Hanya tim Shareat dan mitra yang diverifikasi terlebih dahulu boleh membuat inisiatif/kampanye.
 4. Badan hukum/izin penggalangan dana serta gateway belum tersedia; interaksi awal melalui WhatsApp.
-5. Produk harus profesional, modern, mudah dipakai lintas usia, responsif, mudah dirawat, dan memiliki SEO menyeluruh.
+5. Preview memakai nomor sementara 087776734038 dan seluruh konten contoh harus dinamis serta diberi label demo. Persetujuan nomor sementara tidak menyatakan jam/operator atau organisasi nyata sudah diverifikasi.
+6. Produk harus profesional, modern, mudah dipakai lintas usia, responsif, mudah dirawat, dan memiliki SEO menyeluruh.
 
 Penerjemahan desain: gunakan shadcn-vue untuk ekosistem Vue/Nuxt; gunakan CMS internal agar konten dan bukti publikasi dapat dikelola; jangan menampilkan checkout, rekening, QR pembayaran, atau ajakan transfer pada R1. Pemisahan tersebut adalah keputusan lingkup produk berdasarkan klarifikasi, bukan pernyataan status legal suatu kegiatan yang belum diperiksa.
 
@@ -168,3 +169,7 @@ R2: semua gate R1 tetap berlaku; legal dan gateway disetujui; biaya serta refund
 Risiko utama adalah hosting tidak mendukung Node, lisensi aset tidak tersedia, tim belum mempunyai konten/bukti asli, WhatsApp tidak dipantau, dan fundraising diaktifkan sebelum tata kelola siap. Risiko transaksi tambahan adalah status salah, double posting, selisih settlement, fraud, dan penyaluran tanpa persetujuan. Mitigasi serta owner ada di [DECISIONS](DECISIONS.md).
 
 Permintaan “tanpa gap” diterjemahkan sebagai cakupan dan keterlacakan yang diperiksa, edge case yang eksplisit, dan keputusan terbuka yang dapat ditindaklanjuti. Dokumen tidak dapat menjamin tidak ada kebutuhan baru, semua aturan hukum telah teridentifikasi, atau aplikasi bebas bug sebelum implementasi dan validasi lapangan.
+
+## 15. Preview dan penerimaan implementasi
+
+Preview R1 memakai DB/CMS, bukan hardcoded daftar program/kegiatan. Narasi demo, tanggal, author, organisasi dan kebijakan contoh diberi label; noindex berlaku pada seluruh preview. Copy misi dan struktur navigasi boleh menjadi fondasi desain, sedangkan konten editorial dapat diubah melalui review revision. Publication tetap mensyaratkan identitas berbeda, termasuk pada demo. Pengukuran trafik non-esensial belum diaktifkan (FR-018 Should). Preview lokal tidak menerima uang dan tidak merupakan launch produksi. [IMPLEMENTATION](IMPLEMENTATION.md) menyimpan bukti serta bagian yang belum diterima; semua gate Must produksi tetap berlaku.

@@ -38,7 +38,7 @@ Periksa staged diff, bukan hanya working tree. Jangan commit `.env`, token, priv
 
 Buka PR dengan base `main`, judul yang menjelaskan hasil perubahan, dan deskripsi mengikuti template. Jelaskan masalah, perilaku sesudah perubahan, scope, validasi aktual, serta risiko/dependency yang material. Kaitkan requirement atau keputusan jika relevan. Jangan mencentang pengujian yang belum dijalankan.
 
-GitHub Actions tidak digunakan, sesuai keputusan pemilik pada 3 Oktober 2026. Jalankan pemeriksaan secara lokal dan tulis perintah serta hasil aktual pada deskripsi PR. Validator dokumentasi, whitespace berkas yang diubah, dan reproduksibilitas inventaris/laporan dari checkout commit bersih harus lulus sebelum merge. Pengujian aplikasi ditambahkan ketika aplikasi tersedia; validasi dokumentasi tidak mengklaim menjalankan Nuxt.
+GitHub Actions tidak digunakan, sesuai keputusan pemilik pada 3 Oktober 2026. Jalankan pemeriksaan secara lokal dan tulis perintah serta hasil aktual pada deskripsi PR. Validator dokumentasi, whitespace berkas yang diubah, dan reproduksibilitas inventaris/laporan dari checkout commit bersih harus lulus sebelum merge. Aplikasi R1 menggunakan `npm run lint`, `npm run typecheck`, `npm test`, `npm run format:check`, `npm run build`, dan `npm run test:e2e` terhadap artifact dengan DB demo terisolasi; lihat docs/DEVELOPMENT.md. Validasi dokumentasi sendiri tidak menjalankan Nuxt.
 
 ## Review dan merge
 

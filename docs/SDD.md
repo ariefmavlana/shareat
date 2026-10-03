@@ -1,6 +1,6 @@
 # SDD platform kemanusiaan Shareat
 
-**Versi:** 1.0 · **Tanggal:** 2 Oktober 2026 · **Status:** desain usulan yang belum diimplementasikan. Desain memenuhi baseline [SRS](SRS.md) melalui modular monolith fullstack Nuxt. R1 menjalankan website informasi, CMS, dan WhatsApp; modul keuangan R2 tetap belum aktif sampai gate terpenuhi.
+**Versi:** 1.1 · **Tanggal:** 3 Oktober 2026 · **Status:** desain R1 diimplementasikan untuk preview; extension R2 dan readiness produksi masih rancangan/gate. Desain memenuhi baseline [SRS](SRS.md) melalui modular monolith fullstack Nuxt. R1 menjalankan website informasi, CMS, dan WhatsApp; modul keuangan R2 tetap belum aktif sampai gate terpenuhi.
 
 Keputusan utama: satu codebase dan satu database transaksional dengan batas modul yang jelas, SSR untuk konten publik, shadcn-vue untuk UI, media public/private terpisah, serta external adapter untuk WhatsApp, storage, email dan gateway. Tidak ada kebutuhan awal untuk microservices, Kubernetes, Redis, atau worker daemon yang harus berjalan terus pada shared hosting.
 
@@ -62,7 +62,7 @@ CMS mengelola program, inisiatif, cerita, kebijakan, FAQ dan revisions. Workflow
 
 ### C-03 Identity and access
 
-Server session opaque, permission registry dan organization scope; cookie berisi random 256-bit token, DB hanya hash token. MFA staff memakai TOTP dengan secret encrypted at rest dan recovery code hashed. Password hash scrypt async dari Node; baseline `N=2^15, r=8, p=3` dengan salt unik dan maxmem diuji; scrypt kerja ditolak/diantre saat batas resource tercapai. Jangan mengganti parameter karena host sempit tanpa security review. Session rotation setelah login, MFA dan role change; revoke pada suspend/reset.
+Server session opaque, permission registry dan organization scope; cookie berisi random 256-bit token, DB hanya hash token. MFA staff memakai TOTP dengan secret AES-256-GCM encrypted at rest dan last time-step anti-replay. Recovery supervised membutuhkan dua admin berbeda, bukan offline recovery code; token hashed single use serta reenrollment 5 menit. Password+TOTP diperiksa pada satu endpoint sebelum session penuh diterbitkan (ADR-17). Password hash scrypt async dari Node; baseline `N=2^15, r=8, p=3` dengan salt unik dan maxmem diuji; scrypt kerja ditolak/diantre saat batas resource tercapai. Jangan mengganti parameter karena host sempit tanpa security review. Session rotation setelah login, MFA dan role change; revoke pada suspend/reset.
 
 CSRF token + origin check untuk cookie-auth mutation, same-site secure cookie, HSTS setelah domain siap, login rate limit DB-based. Login awal memerlukan username/password + MFA; tidak menerbitkan session penuh sebelum MFA selesai. Challenge MFA single use ≤5 menit. Cookie `__Host-shareat_session`, Secure, HttpOnly, SameSite=Lax, Path=/; tidak berbagi Domain. Rate limiter tidak bergantung process memory pada multi-instance.
 
@@ -112,73 +112,67 @@ Config schema mempunyai site identity, WA, jam, media limits, revision, dan rele
 
 ```text
 app/
-  assets/css/                 # token dan Tailwind
-  components/ui/             # komponen shadcn-vue yang dimiliki proyek
-  components/programs/       # komponen produk
-  components/initiatives/
-  composables/               # UI orchestration, bukan otorisasi
-  layouts/                   # public, admin
-  middleware/                # navigasi client; server tetap sumber auth
-  pages/                     # route Nuxt
+  assets/css/                # token dan Tailwind
+  components/ui/            # komponen shadcn-vue milik proyek
+  components/admin/         # form CMS
+  components/               # komponen produk dan template publik
+  composables/              # fetch, staff state, SEO, tanpa policy otorisasi
+  layouts/                  # default dan admin
+  middleware/               # guard navigasi, bukan pengganti auth server
+  pages/                    # Nuxt public/admin/arsip kebijakan
 server/
-  api/v1/                    # HTTP handler tipis
-  middleware/                # request ID, header, session context
-  modules/
-    identity/                # service, repository, policy
-    content/
-    media/
-    contact/
-    settings/
-    audit/
-    privacy/
-    donation/                # R2
-    payment/                 # R2
-    finance/                 # R2
-  integrations/              # storage, mail, gateway adapters
-  db/schema/                 # per domain, FK explicit
-  db/migrations/
-  jobs/                      # lease, outbox, maintenance
-  releases/r2/api/           # handler keuangan di luar auto-scanned API R1
-shared/contracts/            # DTO, enum, schema tanpa secret/server imports
-scripts/                     # build/release, cron entry, backup checks
-tests/unit/
-tests/integration/
-tests/e2e/
-docs/
+  api/v1/public/            # allowlist public DTO
+  api/v1/auth/              # login, logout, enrollment, activate
+  api/v1/admin/             # handler privat tipis
+  modules/content/          # service/repository, revision policy
+  modules/identity/         # scrypt/encryption/token
+  modules/media/            # inspeksi/scan/derivatives/private storage
+  modules/contact/          # allowlist setting publik
+  db/schema.ts              # schema R1
+  db/client.ts              # pool MySQL dan TLS
+  middleware/               # headers/request ID/redirect
+  plugins/                  # CSP hashes dan log redacted
+  routes/                   # sitemap/robots/media/legacy redirects/API404
+  utils/                    # HTTP/auth/service composition
+shared/contracts/           # Zod dan DTO, tanpa secret
+scripts/                    # migrate, seed demo, staff, cron/preflight/backup
+drizzle/                  # lihat direktori drizzle: SQL migrations versioned
+tests/                     # unit dan E2E termasuk integrasi MySQL
+docs/                      # PRD/SRS/SDD/ledger/runbook
 ```
 
-Handler melakukan schema parse, authenticate/authorize, memanggil service dan memetakan error. Service mengatur aturan/status/transaction. Repository hanya akses SQL; transaksi dipasok service, bukan tersembunyi pada tiap query. Integrasi network tidak dilakukan sambil memegang DB row lock. Dependency lint mencegah import financial repository dari content/UI. Komponen UI boleh memakai shared DTO, tidak schema DB mentah. Handler R2 berada di luar auto-scanned `server/api`; build memasukkannya melalui explicit Nitro handler configuration hanya pada release R2, dan runtime gate tetap diperiksa setiap mutation.
+Modul donation/payment/finance tidak dibuat pada R1. Future R2 harus memakai handler eksplisit serta server gate yang dinilai pada PR terpisah; rancangan di bawah bukan route aktif.
+
+
+Handler melakukan schema parse, authenticate/authorize, memanggil service dan memetakan error. Service mengatur aturan/status/transaction. Service memegang lifecycle dan authorization. Repository menyediakan operasi transaksi atomik create/mutate dengan callback domain; DB-dependent publish guards (referensi program dan media), optimistic lock, audit/outbox dijalankan di transaksi yang sama. Integrasi network tidak dilakukan sambil memegang DB row lock. Modul keuangan tidak tersedia pada source R1; pengujian direct request membuktikan transaksi 404. Dependency boundary untuk extension keuangan harus ditambahkan saat R2 dibuat. Komponen UI boleh memakai shared DTO, tidak schema DB mentah. Handler R2 berada di luar auto-scanned `server/api`; build memasukkannya melalui explicit Nitro handler configuration hanya pada release R2, dan runtime gate tetap diperiksa setiap mutation.
 
 ## 4. Model data dan constraint
 
-Semua tabel transactional memakai InnoDB dan UTC `DATETIME(3)`. ID `CHAR(36)` UUIDv4 dari crypto runtime; financial reference provider disimpan terpisah. Slug unique dengan indeks collation yang ditentukan; field nama/copy utf8mb4. Uang `BIGINT` integer IDR dan JSON string decimal agar aman lintas runtime. `version INT` untuk optimistic locking. Soft archive digunakan pada domain publik; ledger tidak hard delete.
+Semua tabel transactional memakai InnoDB dan UTC `DATETIME(3)`. ID `VARCHAR(36)` UUIDv4 dari crypto runtime; financial reference provider disimpan terpisah. Slug unique dengan indeks collation yang ditentukan; field nama/copy utf8mb4. R2 uang `BIGINT` integer IDR dan JSON string decimal agar aman lintas runtime. `version INT` untuk optimistic locking. Soft archive digunakan pada domain publik; ledger tidak hard delete.
 
-### Tabel R1
+### Tabel R1 aktual
 
-| Tabel | Field inti | Constraint dan indeks |
-| --- | --- | --- |
-| users | id, email_normalized, password_hash, status, mfa_secret_cipher, created_at | Unique email untuk staff; suspended/revoked tidak dapat session |
-| organizations | id, name, slug, verification_status, verified_by, verified_at, evidence_asset_id | Unique slug; verification checklist privat; verified_by staff berhak |
-| memberships | user_id, organization_id, role, status | Unique tuple role/member; indeks org/user; scope grant explicit |
-| sessions | token_hash, user_id, expires_at, idle_at, auth_level, revoked_at | Unique token hash, index expiry/user; hashed token tidak di-log |
-| auth_challenges | id, user_id, kind, token_hash, expires_at, consumed_at, attempts | Unique hash; atomic single use; purpose-bound |
-| programs | id, slug, name, description, sort_order, enabled, published_revision_id, version | Unique slug; FK campaign melarang hard delete yang dipakai; field publik melalui approved snapshot |
-| campaigns | id, organization_id, program_id, slug, activity_status, published_revision_id, archived_at, version | Unique slug, FK owner/program; index program/published/status/date |
-| content_revisions | id, entity_type, entity_id, revision_number, body_json, status, author_id, reviewer_id, reviewed_at, published_at, checklist_json, content_hash | Unique entity/revision; reviewed identity berbeda; public hanya melalui approved snapshot |
-| stories | id, slug, campaign_id nullable, published_revision_id, archived_at, version | Unique slug; index campaign/published date |
-| pages | id, slug, kind, published_revision_id, version | Unique slug; kebijakan tanggal efektif ada pada revision |
-| assets | id, storage_key, sha256, mime, bytes, width, height, visibility, scan_status, rights_status, consent_ref, owner_org, created_at | Unique key; index owner/visibility; scan dan rights mandatory |
-| asset_variants | asset_id, width, format, key, bytes | Unique asset/width/format; publik hanya turunan approved |
-| redirects | from_path, to_path, status, changed_by, created_at | Unique from_path; reject loop/internal private target |
-| settings | key, value_json, version, changed_by | Schema per key, explicit audit, secret dilarang di value publik |
-| audit_logs | id, actor_id nullable, action, resource_type/id, request_id, reason, redacted_diff, created_at | Insert-only application role, index target/time, offsite hash snapshot |
-| outbox_jobs | id, type, aggregate_id, dedupe_key, payload_safe, status, available_at, attempts, lease_until, lease_owner, last_error | Unique dedupe key; index status/available; retry safe |
-| rate_limit_buckets | key_hash, window_start, count, expires_at | Atomic increment, index expiry; no raw IP/email |
-| privacy_requests | id, requester_ref, type, status, verified_at, resolution, due_at | Privat; workflow audit, retensi terpisah |
+Source schema: [server/db/schema.ts](../server/db/schema.ts), SQL: [drizzle](../drizzle/). Semua record konten menggunakan entity generik; tabel program/campaign/story/page terpisah dari baseline konseptual tidak digunakan (ADR-16).
 
-Tabel revision polimorfik memerlukan validasi entity existence di service karena FK ke beberapa tabel tidak langsung tersedia. FK published_revision_id tetap dibuat; service memverifikasi revision menunjuk entity dan organization yang tepat. Circular FK dilakukan pada migration kedua setelah tabel dibuat; publish transaction mengunci entity dan revision. Alternatif tabel revisions per entity dapat dipilih saat spike jika constraint lebih mudah dibuktikan.
+| Tabel | Tanggung jawab dan constraint |
+| --- | --- |
+| organizations | Team/partner, slug unique, verified/suspended, evidence privat |
+| users | Single organization FK, email unique, roles JSON tervalidasi, suspended, scrypt, secret MFA encrypted, last_totp_step |
+| sessions | Hash token primary key, user FK, hash CSRF, absolute8h/idle30m, expiry indexes |
+| auth_challenges | Invite/recovery kind, unique token hash, payload privat, expiry/consumed atomic |
+| content_entities | kind program/initiative/story/page/faq, owner FK, unique(kind,slug), version, published revision FK, everPublished/archive |
+| content_revisions | Entity FK, unique(entity,sequence), plain text body JSON, author/reviewer FK, status/checklist, timestamp snapshot |
+| assets | UUID key unique, owner/upload author FK, actual MIME/dimensions/sha256, scan/rights/reviewer/evidence privat |
+| settings | Allowlisted key/value JSON/version; contact changes lewat proposal |
+| change_proposals | Kind contact/organization/recovery, maker/checker berbeda, pending/approved, payload privat |
+| audit_logs | Actor/action/target/requestId/reason/safeChange/time; tidak ada API update/delete |
+| outbox_jobs | Type/entity/status/available/attempts/lease; publication events atomik |
+| rate_limit_buckets | Salted key hash/count/expiry, increment transactional, tidak menyimpan raw IP/email |
+| redirects | Unique fromPath, toPath, reviewer action audit; rewrite alias satu hop |
 
-Program adalah taxonomy kecil dengan entity_type program dalam content_revisions; nama/deskripsi/urutan/status yang tampil publik mengikuti review dan published snapshot. Perubahan slug menghasilkan redirect setelah publish. Draft tidak mengubah public program list. Detail campaign menyimpan aktivitas, lokasi aman, tujuan dan schedule dalam published body JSON tervalidasi. Public program list tidak membaca free-form private proof.
+Published revision FK melingkar ditambahkan pada migration0003 setelah kedua tabel tersedia. Service memilih revision dari entity yang sama; revision body tidak ditimpa saat status berubah. Public query memakai published pointer, bukan revisi terakhir. Private list memilih latest revision dan pagination20 di SQL, ownership mitra sebelum query; detail privat memuat riwayat. ProgramSlug pada body adalah relasi taxonomy logical yang diperiksa saat publish initiative, bukan FK JSON; tidak ada endpoint hard-delete program. Tidak ada finance, donor, memberships multi-org, asset_variants table atau privacy_requests table R1. Width derivatives disimpan dengan UUID-width key; retensi audit/privacy dan kontrol DBA/offsite tetap gate operasi.
+
+Program, cerita, FAQ, halaman inti dan kebijakan mengikuti proses revision yang sama. Slug page yang berbenturan dengan route sistem ditolak422; duplikasi identitas/slug mendapat409. Custom page mempunyai route satu segmen dari slug published. Arsip privasi/ketentuan hanya menyajikan revision yang pernah published, noindex, dengan public DTO; draft dan withdrawn entity tidak dapat dibuka melalui arsip.
 
 ### Extension R2
 
@@ -208,7 +202,7 @@ Program adalah taxonomy kecil dengan entity_type program dalam content_revisions
 
 DB users terpisah untuk application dan migrations. Pada shared host yang membatasi grants, append-only dijaga service/permissions dan audit offsite, tetapi risiko admin DB tetap dicatat; R2 membutuhkan kemampuan kontrol yang sesuai. Money CHECK dan FK diuji pada versi actual. Hindari cascade delete terhadap finance; UUID personal reference bisa dipseudonymize sesuai retention policy.
 
-### Hubungan domain
+### Hubungan domain konseptual extension R2
 
 ```mermaid
 erDiagram
@@ -229,35 +223,18 @@ erDiagram
 
 ## 5. API dan kontrak integrasi
 
-REST JSON `/api/v1` dipilih untuk public/admin; session via cookies. GET tidak mempunyai side effect bisnis. List mengembalikan `{data, pagination:{page,pageSize,total}, requestId}`; mutation `{data,requestId}`. Error format mengikuti SRS. Semua endpoint private `Cache-Control: no-store`, otorisasi server, CSRF dan rate limit sesuai risiko. Cursor/cutoff pagination digunakan laporan besar R2; pagination page pada public SEO.
+REST JSON `/api/v1` memakai cookie session. Kontrak R1 aktual tersedia pada [API](API.md): list `{items,page,pages,total}`, detail/mutation object langsung, request ID pada response header, error H3 dengan status/message aman. Input strict menolak field asing, semua JSON dibatasi128KiB. API desain R2 di bawah belum terdaftar.
 
-### API R1
+### API R1 aktual
 
-| Endpoint | Otorisasi | Kontrak utama |
-| --- | --- | --- |
-| GET `/programs` | Public | Enabled published program DTO |
-| GET `/initiatives` | Public | Filter enum allowlist, q≤100, pageSize≤20; hanya published; q tidak masuk raw analytics |
-| GET `/initiatives/{slug}` | Public | Published detail safe DTO; absent/private404, permanently withdrawn410 |
-| GET `/stories`, `/stories/{slug}`, `/pages/{slug}` | Public | Snapshot content, sanitized HTML/JSON, metadata |
-| GET `/contact` | Public | Nomor resmi, jam, URL/preset aman; secret settings tidak terkirim |
-| POST `/auth/login`, `/auth/mfa`, `/auth/logout` | Anonymous/challenge/session | Rate-limited, rotate/revoke, generic errors |
-| POST `/auth/recovery/request`, `/auth/recovery/complete` | Anonymous/token | Generic receipt, single use; recovery MFA dua staff melalui SOP |
-| GET/POST `/admin/initiatives` | Scoped staff | Create/update draft; server derives owner permitted |
-| PATCH `/admin/initiatives/{id}` | Scoped editor | `If-Match`/version mandatory; conflict409 |
-| POST `/admin/revisions/{id}/submit` | Revision editor | Checklist ready, partner verified, no self review |
-| POST `/admin/revisions/{id}/review` | Reviewer | Approve/request changes, reason, checklist, version |
-| POST `/admin/revisions/{id}/publish` | Reviewer | Verified revision + entity lock + atomic public pointer + outbox |
-| POST `/admin/initiatives/{id}/archive` | Reviewer | Reason, public purge/sitemap outbox, archive history |
-| CRUD `/admin/programs`, `/admin/stories`, `/admin/pages` | Appropriate editor/reviewer | Revision process or taxonomy restricted review |
-| POST `/admin/media/upload` | Scoped staff | Multipart limited/quarantine; response asset reference, not private public URL |
-| GET `/admin/media/{id}/download` | Need-based staff | Audit and signed link/stream, no-store |
-| POST `/admin/organizations/{id}/verify` | Authorized admin/reviewer | Evidence/checklist/verification identity; revocation supported |
-| POST `/admin/users/invite`, `/admin/users/{id}/suspend`, `/admin/users/{id}/roles` | Authorized admin | Purpose-bound invitation, scope grants dan revocation; audit; tidak dapat bypass dual review |
-| GET/PATCH `/admin/settings` | Scoped admin | Whitelist key schema + version + audit, no secrets echo |
-| POST `/admin/settings/contact/propose`, `/{proposalId}/approve` | Admin maker/admin reviewer | Perubahan nomor WA published memerlukan dua identitas; draft settings tidak mengubah public link |
-| GET `/admin/audit` | Auditor/admin scoped | Redacted searchable log, no mutations |
+- `/public/content`, `/public/home`, `/public/{kind}/{slug}`, `/public/settings`, `/public/policies/{slug}/versions` dan `/{id}` menyediakan DTO publik.
+- `/auth/login` memeriksa password+TOTP; `/auth/me`, `/auth/logout`, `/auth/enroll`, `/auth/activate` mengatur opaque session dan enrollment.
+- `/admin/content` dan `/{id}` menyediakan create/read/save; `/{id}/transition` dan `/{id}/slug` memakai expected version.
+- `/admin/team`, `/team/organization`, `/team/invite`, `/team/suspend`, `/team/recovery` mengatur staff/mitra; `/admin/settings/{id}/approve` memberi second approval proposal.
+- `/admin/settings`, `/settings/contact`, `/admin/media`, `/media/{id}/approve`, `/media/{id}/download`, `/admin/audit` memakai otorisasi sesuai kebutuhan.
+- `/api/health` menguji koneksi DB dengan output minimal. Cron hanya CLI `jobs:run`, tanpa endpoint jobs/metrics anonymous. Unknown API termasuk uang ditangani404.
 
-Ops endpoints terpisah `/health/live`, `/health/ready`, `/internal/jobs/run` dan `/internal/metrics` sesuai host. Live hanya proses hidup, ready mengecek dependency dengan timeout; output publik minimal. Internal endpoint tidak terbuka untuk anonymous: secret scoped disampaikan header, allowlist bila tersedia, signed request/replay protection untuk cron eksternal. CLI cron preferensi; jangan meletakkan secret pada URL.
+Uploader mengirim raw binary bounded, bukan multipart; actual bytes diperiksa Sharp/PDF signature. Scan memanggil executable tetap dari config server. Media private di-stream setelah auth/ownership setiap request; tidak ada signed bearer URL R1. Audit UI menampilkan100 event terbaru, bukan export/search lengkap; pagination audit dan retensi produksi tetap pekerjaan operasional yang tercatat di ledger.
 
 ### API R2 yang tidak terdaftar pada R1
 
@@ -462,7 +439,7 @@ R2 membutuhkan tambahan inbound webhook HTTPS443 tanpa challenge interaktif WAF,
 
 ### Spike kandidat hosting
 
-Uji artifact Nuxt SSR dan `/api` setelah deploy, restart dan idle; ESM startup/port binding/Passenger; env private; session MFA; mysql2 TLS jika remote; transaksi/locking/FK; media public/private dan signed access; cron lease; DB quota/load; public headers/sitemap; 404/410; logs; backup export dan restore. R2 tambah sandbox callback/outbound gateway, idempotency burst, RPO/PITR dan reconciliation recovery.
+Uji artifact Nuxt SSR dan `/api` setelah deploy, restart dan idle; ESM startup/port binding/Passenger; env private; session MFA; mysql2 TLS jika remote; transaksi/locking/FK; media public/private dan authenticated download; cron lease; DB quota/load; public headers/sitemap; 404/410; logs; backup export dan restore. R2 tambah sandbox callback/outbound gateway, idempotency burst, RPO/PITR dan reconciliation recovery.
 
 cPanel Application Manager memerlukan komponen provider seperti Passenger; sumber [cPanel resmi](https://docs.cpanel.net/cpanel/software/application-manager/). Tidak menyediakan bootstrap wrapper ESM-to-CJS generik yang belum diuji. Jika panel mensyaratkan entry berbeda, adapter deployment ditulis setelah environment nyata diketahui dan hasil spike dicatat pada ADR.
 
@@ -474,12 +451,12 @@ cPanel Application Manager memerlukan komponen provider seperti Passenger; sumbe
 
 ### Environment dan release
 
-Environment development/staging/production terpisah database, storage, nomor WA testing dan domain. Staging memakai sandbox data dan auth/noindex; tidak menyimpan donor/bukti asli. `.env.example` kelak hanya key dan nonsecret sample. Runtime secret melalui environment, konfigurasi Nuxt mengikuti mapping `NUXT_` untuk runtimeConfig; baca raw process env hanya di server adapter tervalidasi. Jangan mengasumsikan `.env` dibaca artifact production.
+Environment development/staging/production terpisah database, storage, nomor WA testing dan domain. Staging memakai sandbox data dan auth/noindex; tidak menyimpan donor/bukti asli. `.env.example` hanya key dan nonsecret sample. Runtime secret melalui environment, konfigurasi Nuxt mengikuti mapping `NUXT_` untuk runtimeConfig; baca raw process env hanya di server adapter tervalidasi. Jangan mengasumsikan `.env` dibaca artifact production.
 
 | Config | Kelas | Nilai yang harus tersedia |
 | --- | --- | --- |
 | Site URL, display name, WA, hours | Public allowlist | Approved actual data, default belum siap memblokir publish kontak |
-| Release mode | Server | `information` R1; `fundraising` R2 setelah gate |
+| Release mode | Server | `NUXT_APP_MODE=demo` atau `production`, keduanya hanya R1; R2 memerlukan implementasi/gate baru |
 | DB connection | Secret server | Provider supported DB, password, TLS policy |
 | Session/MFA encryption keys | Secret server | Key rotation/version, tidak sama dengan cron/payment |
 | Storage endpoint/access/keys | Secret server | ACL private/public separate |
@@ -504,3 +481,13 @@ Runbook wajib: website down, DB quota/connection, media blocked/quota, cache pur
 Unit untuk domain validation, role policy, revision state, WA encoding, canonical dan money invariant R2. Integration dengan versi DB production untuk locking, idempotency, published DTO privacy, atomic outbox dan migrations. E2E R1 untuk mobile public navigation, keyboard/MFA CMS, mitra scope, approve/publish, WA/fallback, noindex dan404; R2 menambah sandbox checkout/webhook/refund/reconciliation. Access control dan finance memiliki negative tests; load dan restore membuktikan target host.
 
 R1 implementasi bertahap: spike stack/host → auth/schema/media → design system/public CMS → editorial/review/WA → SEO/privacy/jobs → testing/restore → release. R2: legal/policy ready → extension schema/ledger → adapter sandbox → donation/status/access → reconcile/refund/payout → tests crash/replay → finance pilot → activation. Semua TC pada [matriks](TRACEABILITY.md) merupakan rencana; laporan dokumentasi tidak mencentang hasil aplikasi sebagai lulus.
+
+## 14. Status implementasi dan pilihan operasi preview
+
+Dependency exact ada di package.json/package-lock.json; Nuxt4.5.2/Vue3.5.43, shadcn-nuxt2.8.2/reka-ui2.10.5, Tailwind4.3.3, MySQL8.4/Drizzle0.45.3, Node24.19.0 diuji lokal. SSR dan API berada pada artifact node-server. Dockerfile menyediakan build Linux lokal dan runtime optional nonroot; shared hosting tidak wajib mendukung Docker.
+
+Preview sengaja memakai no-store pada seluruh halaman/API/media. Tidak ada public cache maupun CDN purge; pointer DB menentukan publikasi/withdrawal langsung. Cron publication_changed hanya mengakui event karena tidak ada cache eksternal. Cache untuk memenuhi workload NFR-009 merupakan pekerjaan berikutnya dengan uji purge sebelum aktif, bukan feature yang dianggap sudah ada. Endpoint telemetry/alert eksternal, offsite backup/restore, quota storage dan retensi privasi masih gate; log aplikasi dan manifest checker sendiri tidak memenuhi seluruh NFR.
+
+CSP untuk HTML memakai hashes script SSR, self sources, frame/object denied; stylesheet memakai unsafe-inline karena runtime style komponen. Demo dibatasi loopback pada pengujian lokal. Bila preview dibuka di staging remote, operator wajib menambahkan network/auth restriction dan tidak hanya robots/noindex. Head SSR menghasilkan title/description/canonical/OG/JSON-LD; sitemap satu file pada volume preview. Batas sitemap50.000/50MB harus dijadikan split/index sebelum volume mencapainya.
+
+[IMPLEMENTATION](IMPLEMENTATION.md) merupakan ledger penerimaan aktual; [OPERATIONS](OPERATIONS.md) menentukan langkah deployment/rollback dan syarat minimum host. Rancangan extension R2 tetap terpisah dari schema/route aplikasi saat ini.

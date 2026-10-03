@@ -1,29 +1,52 @@
 # Shareat
 
-Platform kemanusiaan Indonesia dengan program Share Eat, Share Knowledge, Share Book, dan program berbagi lainnya. Repository saat ini berisi perencanaan produk serta referensi desain; aplikasi Nuxt belum diimplementasikan.
+Website informasi kemanusiaan Indonesia berbasis **Nuxt 4 fullstack, TypeScript, shadcn-vue, Tailwind 4, Nitro, MySQL 8.4 dan Drizzle**. Implementasi R1 mencakup website SSR, CMS privat, review publikasi, MFA, pengelolaan mitra, media privat, dan kontak WhatsApp.
 
-R1 menyediakan informasi program, transparansi, CMS privat, serta kontak WhatsApp. R2 menambahkan crowdfunding setelah kesiapan legal, payment gateway, dan operasional keuangan terpenuhi.
+Preview memakai **data demo yang tersimpan di MySQL dan dapat diedit melalui CMS**, bukan daftar kegiatan statis. Nomor sementara dari pemilik adalah **087776734038** (`6287776734038`). Identitas, agenda, cerita, kebijakan, dan jam layanan masih contoh. Preview memiliki label demo serta noindex. R1 tidak menerima pembayaran; R2 menunggu gate legal, keuangan, dan gateway.
 
-## Dokumentasi
+## Menjalankan lokal
 
-- [Indeks dokumentasi](docs/README.md)
-- [PRD](docs/PRD.md), [SRS](docs/SRS.md), dan [SDD](docs/SDD.md)
-- [Keputusan dan gate peluncuran](docs/DECISIONS.md)
-- [Keterlacakan dan rencana penerimaan](docs/TRACEABILITY.md)
-- [Sumber dan audit referensi](docs/EVIDENCE.md)
-
-## Kontribusi
-
-Setiap fitur, perbaikan, dokumentasi, refactor, dan perubahan konfigurasi harus dimulai di branch baru dan diajukan melalui pull request ke `main`. Ikuti [CONTRIBUTING.md](CONTRIBUTING.md) dan [AGENTS.md](AGENTS.md). Perubahan pada `main` masuk melalui PR; merge memerlukan keputusan pemilik/maintainer yang berwenang.
-
-## Validasi dokumentasi
-
-Gunakan Python 3.11 atau lebih baru dan Pillow yang sesuai environment:
+Gunakan Node **24 LTS** (`>=24.11 <25`), npm, dan MySQL 8.4. Docker Compose menyediakan database lokal opsional.
 
 ```sh
-python -m pip install Pillow
+cp .env.example .env
+# Isi password database, URL database, dan kunci enkripsi 32 byte dalam format hex.
+# Sesuaikan NUXT_SITE_URL dengan origin aplikasi, misalnya http://127.0.0.1:3001.
+npm ci
+docker compose up -d db
+npm run db:migrate
+npm run db:seed
+npm run dev -- --port 3001
+```
+
+Generate kunci dengan `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`. Setiap secret harus berbeda; jangan commit `.env`. Seed hanya diizinkan dalam `NUXT_APP_MODE=demo` dan tidak menimpa hasil edit CMS. Akun serta enrollment TOTP dibuat di `.data/demo-access.json`, yang diabaikan Git. Buka `/admin/login` setelah memasukkan secret akun ke aplikasi authenticator. File ini memuat akses privat; jangan dibagikan atau dipublikasikan.
+
+## Validasi lokal
+
+```sh
+npm run lint
+npm run typecheck
+npm test
+npm run format:check
+npm run build
+# Jalankan artifact dengan environment tersuplai; bukan server dev.
+node --env-file=.env .output/server/index.mjs
+# Terminal lain, dengan TEST_BASE_URL sesuai server dan database demo terisolasi:
+npx playwright install chromium
+npm run test:e2e
 python docs/tools/validate_docs.py
 git diff --check
 ```
 
-Pillow digunakan agar dimensi media dalam inventaris konsisten. Validator memeriksa tautan, ID, matriks requirement, skenario penerimaan, dan aset; belum menjalankan pengujian aplikasi. Pemeriksaan dijalankan lokal dan hasilnya dicatat pada PR; GitHub Actions tidak digunakan. Referensi `referensi/` merupakan bahan desain, bukan aplikasi produksi. Integrasi peta dengan kunci tertanam telah dihapus sebelum publikasi; konfigurasi PHP lokal tidak dilacak Git. Hak penggunaan media masih perlu diperiksa sesuai audit.
+`HOST`/`PORT` mengatur listener artifact. Nuxt artifact tidak otomatis membaca `.env`. Pengujian E2E memodifikasi database demo dan hanya menerima mode demo pada loopback. **GitHub Actions tidak digunakan.** Hasil dan batas pengujian tercatat pada [status implementasi](docs/IMPLEMENTATION.md).
+
+## Dokumentasi
+
+- [PRD](docs/PRD.md), [SRS](docs/SRS.md), [SDD](docs/SDD.md), [keputusan dan gate](docs/DECISIONS.md).
+- [Status requirement dan bukti](docs/IMPLEMENTATION.md), [traceability](docs/TRACEABILITY.md).
+- [Pengembangan dan konfigurasi](docs/DEVELOPMENT.md), [kontrak API](docs/API.md), [deployment dan runbook](docs/OPERATIONS.md).
+- [Sumber dan audit referensi](docs/EVIDENCE.md), [validasi dokumentasi](docs/VALIDATION.md).
+
+Produksi masih membutuhkan hosting yang terbukti mendukung Node, domain/HTTPS, konten dan identitas aktual, operator, scanner media, backup offsite, serta pengujian kapasitas dan recovery. Dependency audit juga belum bersih. Tidak ada klaim siap produksi atau bebas bug.
+
+Setiap perubahan menggunakan branch khusus dan PR ke `main`; lihat [CONTRIBUTING](CONTRIBUTING.md) dan [AGENTS](AGENTS.md). Merge serta deployment memerlukan otorisasi pemilik. Materi `referensi/` bukan aplikasi produksi dan tidak otomatis memiliki izin penggunaan; foto/font template tidak diteruskan ke website baru.
