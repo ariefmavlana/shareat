@@ -6,6 +6,7 @@ dist/
 coverage/
 test-results/
 playwright-report/
+.sass-cache/
 
 # Local secrets and legacy PHP contact configuration
 .env
