@@ -11,6 +11,7 @@ Node 24.19.0, PostgreSQL 18.6 Docker, Nuxt 4.5.2, Vue 3.5.43, TypeScript 6.0.3, 
 | Pemeriksaan | Hasil aktual |
 | --- | --- |
 | npm run check | Lint max-warnings0, strict typecheck,18 unit test, dan artifact build berhasil |
+| Reproduksi source bersih | Git archive staged snapshot: npm ci, lint, typecheck dan18 unit lulus; generated docs identik setelah normalisasi newline; Docker artifact Linux dari snapshot bersih lulus. Rebuild Windows di folder bersarang dihentikan saat bundle berjalan lama; build Windows workspace utama lulus |
 | npm run format:check | Semua source yang termasuk scope formatter lulus |
 | docker build --target runtime -t shareat-r1:postgres . | Build Linux Node 24.19.0 berhasil, runtime usernode dan private media writable |
 | TEST_BASE_URL=http://127.0.0.1:3002 npm run test:e2e | Artifact Linux dengan DB PostgreSQL nyata; Lulus 12/12 dalam24,9 detik setelah hardening alias, termasuk assertion console error/hydration |
