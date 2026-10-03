@@ -13,6 +13,10 @@ These rules apply to every change in this repository, including features, fixes,
 7. Push the task branch and open a PR targeting `main`. Use the PR template and include the problem, resulting behavior, scope, validation evidence, and material limitations.
 8. Do not merge a PR or deploy without explicit user/maintainer authorization. Resolve failing checks before declaring the PR ready.
 
+## Validation without GitHub Actions
+
+Do not create, enable, or rely on GitHub Actions workflows. The owner explicitly prohibited GitHub Actions usage on 3 October 2026. Run relevant checks locally and record actual commands and results in the PR description. Documentation validation and generated-file reproducibility must pass before merge. The target main protection retains the PR requirement, resolved conversations, linear history, and restrictions on force push/deletion, without a required GitHub Actions status check. Confirm the server settings before merge; documentation does not change them.
+
 ## Product and architecture baseline
 
 Read `docs/PRD.md`, `docs/SRS.md`, `docs/SDD.md`, and `docs/DECISIONS.md` for the current task's scope. R1 is information/CMS/WhatsApp; payments and fundraising belong to R2 after its gates. Do not enable R2 by adding a frontend button or accepting manual transfers through WhatsApp.

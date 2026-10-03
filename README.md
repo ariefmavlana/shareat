@@ -26,4 +26,4 @@ python docs/tools/validate_docs.py
 git diff --check
 ```
 
-Pillow digunakan agar dimensi media dalam inventaris konsisten. Validator memeriksa tautan, ID, matriks requirement, skenario penerimaan, dan aset; belum menjalankan pengujian aplikasi. Referensi `referensi/` merupakan bahan desain, bukan aplikasi produksi. Integrasi peta dengan kunci tertanam telah dihapus sebelum publikasi; konfigurasi PHP lokal tidak dilacak Git. Hak penggunaan media masih perlu diperiksa sesuai audit.
+Pillow digunakan agar dimensi media dalam inventaris konsisten. Validator memeriksa tautan, ID, matriks requirement, skenario penerimaan, dan aset; belum menjalankan pengujian aplikasi. Pemeriksaan dijalankan lokal dan hasilnya dicatat pada PR; GitHub Actions tidak digunakan. Referensi `referensi/` merupakan bahan desain, bukan aplikasi produksi. Integrasi peta dengan kunci tertanam telah dihapus sebelum publikasi; konfigurasi PHP lokal tidak dilacak Git. Hak penggunaan media masih perlu diperiksa sesuai audit.

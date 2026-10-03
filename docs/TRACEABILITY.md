@@ -55,7 +55,7 @@
 | NFR-007 | P-10 | R1/R2 | C-12 | TC-042 | External probe with downtime evidence monthly; target R1/R2 distinguished and host assessed before R2 |
 | NFR-008 | P-10 | R1/R2 | C-12 | TC-043 | Restore DB/media/key/privacy suppression; R1RPO24h/RTO8h, R2PITR15m/RTO4h+gateway replay measured |
 | NFR-009 | P-10 | R1/R2 | C-12 | TC-044 | Workload NFR30min, error<1%, quotas/pool/cron observed; R2 burst callbacks and cached public traffic isolated |
-| NFR-010 | P-10 | R1/R2 | C-12 | TC-045 | CI lockfile/lint/strict type/build/boundaries/migrations, compatible deploy+rollback and dependency audit |
+| NFR-010 | P-10 | R1/R2 | C-12 | TC-045 | Script lokal lockfile/lint/strict type/build/boundaries/migrations, compatible deploy+rollback, dependency audit dan bukti pada PR tanpa GitHub Actions |
 | NFR-011 | P-10 | R1/R2 | C-07 | TC-046 | Inject error/stale backup/dead letter/purge failure; R2 unknown/reconciliation alerts reach on-call and runbook |
 | NFR-012 | P-09 | R2 | C-09 | TC-047 | Crash before/after DB commit and provider reply; replay events/refunds/payouts, balanced/unique journals and reservations |
 

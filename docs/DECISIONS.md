@@ -12,6 +12,8 @@
 | U-04 | Badan hukum/izin dan gateway belum tersedia | R2 deferred, tidak menerima pembayaran pada R1 |
 | U-05 | Awalnya WA untuk reach out | Kontak eksternal berbasis klik pengguna; bukan automated WA send atau manual payment flow |
 
+Keputusan tambahan U-06 pada 3 Oktober 2026: pemilik melarang penggunaan GitHub Actions. Workflow dihapus dan pemeriksaan dilakukan lokal dengan bukti pada PR. Konfigurasi proteksi main yang dituju tetap mewajibkan PR tanpa required check Actions; pengaturan server harus diverifikasi sebelum merge.
+
 ## 2. ADR ringkas
 
 | ADR | Keputusan desain usulan | Alasan dan tradeoff | Bukti sebelum diterapkan |
@@ -30,6 +32,8 @@
 | ADR-12 | Rp0 fee donor/campaign, fee gateway dari operator | UX sederhana dan principal tidak dipotong; memerlukan modal operasi dan saldo kas | Persetujuan owner + finance dan sumber biaya |
 | ADR-13 | Flexible funding, surplus dijelaskan, tidak hard cap | Kegiatan dapat disesuaikan sesuai kebijakan; donor harus memahami kondisi gagal/target tidak tercapai | Ketentuan published legal/finance review |
 | ADR-14 | Naikkan hosting bila gate R2 gagal | Keandalan uang memerlukan recovery lebih ketat; deployment mungkin keluar dari shared host | Availability/PITR/cron/webhook/load evidence |
+
+ADR-15 menetapkan validasi dan build lokal tanpa GitHub Actions berdasarkan keputusan eksplisit pemilik. Validator, whitespace, reproduksibilitas checkout bersih, dan pemeriksaan aplikasi yang relevan tetap wajib; hasilnya ditinjau pada PR.
 
 Jika keputusan berubah, buat ADR revisi dengan trigger, opsi, alasan, perubahan FR/NFR, migration dan konsekuensi operasi. Tidak mengganti keputusan hanya pada satu dokumen.
 
@@ -53,7 +57,7 @@ Jika keputusan berubah, buat ADR revisi dengan trigger, opsi, alasan, perubahan 
 | O-14 | Finance maker/checker, accountant dan penerima/payee verified | Role split wajib; manual transfer baseline | Finance/operations | Sebelum R2 payout/refund |
 | O-15 | RPO15m/PITR dan availability R2 di host | Tidak dianggap didukung shared host; upgrade jika gagal | Engineering/operations | Sebelum menerima uang R2 |
 | O-16 | Kanal email R2 dan guest receipt, deliverability | Transactional email adapter required untuk R2; R1 staff recovery supervised | Engineering/support | Sebelum R2 guest checkout |
-| O-17 | AV scanner dan image pipeline pada host | Scan sebelum private PDF access/public derivative; external/CI adapter bila native gagal | Engineering/security | Sebelum media workflow R1 |
+| O-17 | AV scanner dan image pipeline pada host | Scan sebelum private PDF access/public derivative; service adapter atau lingkungan build lokal bila native gagal | Engineering/security | Sebelum media workflow R1 |
 | O-18 | Analytics vendor dan dasar pemrosesan | Optional minimal agregat, disabled until policy ready | Product/privacy | Sebelum analytics non-esensial aktif |
 
 Register terbuka adalah dependency yang sengaja terlihat, bukan placeholder implementasi tanpa owner. Dokumen sudah mendefinisikan perilaku aman ketika dependency belum ada: unpublished, disabled atau blocked activation sesuai kasus.

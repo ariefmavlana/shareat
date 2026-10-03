@@ -8,7 +8,7 @@ List the relevant files/modules, release scope, and any linked requirement or de
 
 ## Validation
 
-Record checks actually performed and their results. Include manual evidence when appropriate.
+Record local checks actually performed, their commands, and results. GitHub Actions is not used. Include manual evidence and clean-checkout reproducibility where appropriate.
 
 - [ ] Relevant validation passes
 - [ ] Staged diff reviewed for unrelated changes and sensitive data

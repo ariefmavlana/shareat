@@ -21,7 +21,7 @@ Keputusan utama: satu codebase dan satu database transaksional dengan batas modu
 | SEO | `useSeoMeta`/`useHead`, `@nuxtjs/sitemap`, robots module atau endpoint sendiri | Pilih modul ringan yang kompatibel; OG image static dari pipeline, schema typed helper |
 | Media | Static derivatives atau storage adapter kompatibel S3 | Public image resize saat upload/build, tidak memaksa native runtime resize pada host |
 | Test | Nuxt test utils + Vitest; Playwright + axe | Domain/integration/end-to-end/aksesibilitas; versi sesuai matriks Nuxt |
-| Tooling | npm stable bawaan runtime + lockfile, ESLint Nuxt, formatter | Satu package manager; `npm ci` untuk CI; build di CI Linux yang sesuai produksi |
+| Tooling | npm stable bawaan runtime + lockfile, ESLint Nuxt, formatter | Satu package manager; `npm ci` untuk instalasi deterministik; build lokal dalam lingkungan Linux yang sesuai produksi, tanpa GitHub Actions |
 | Observability | Log JSON + external uptime + error adapter | Vendor bebas konfigurasi, data sensitif dimasking |
 
 Daftar ini bukan klaim bahwa seluruh dependency patch terbaru sudah terpasang atau diuji. Spike menyimpan exact versions, lockfile, hasil build, licensing dan security audit. Beta/RC tidak menjadi baseline produksi. MySQL dan MariaDB tidak dipertukarkan tanpa migration/query/locking test; MariaDB supported dapat menjadi alternatif setelah ADR revisi. Prisma dan Nuxt Content bukan dependency wajib: CMS memakai relational DB agar tidak membuat kebutuhan build/filesystem ekstra di shared hosting.
@@ -70,7 +70,7 @@ R1 invitation/reset staff menggunakan token yang diterbitkan server, hash dan ex
 
 ### C-04 Media and evidence
 
-Upload privat dahulu → inspect MIME/signature/dimensi → quarantine scan → rights review → generate derivatives → tandai publishable → referensikan published content. JPEG/PNG/WebP public; PDF private untuk bukti staff. Object key random dan tidak menerima raw user path. Storage memisahkan namespace/private ACL. Signed access private TTL ≤5 menit atau authenticated streaming; headers `no-store`, `nosniff`, attachment untuk PDF. Pipeline image dilakukan oleh job terbatas atau CI sesuai quota, menghapus EXIF dan menyediakan 400/800/1200/1600 px dengan WebP serta fallback.
+Upload privat dahulu → inspect MIME/signature/dimensi → quarantine scan → rights review → generate derivatives → tandai publishable → referensikan published content. JPEG/PNG/WebP public; PDF private untuk bukti staff. Object key random dan tidak menerima raw user path. Storage memisahkan namespace/private ACL. Signed access private TTL ≤5 menit atau authenticated streaming; headers `no-store`, `nosniff`, attachment untuk PDF. Pipeline image dilakukan oleh job terbatas atau proses build lokal sesuai quota, menghapus EXIF dan menyediakan 400/800/1200/1600 px dengan WebP serta fallback.
 
 ### C-05 WhatsApp contact
 
@@ -452,7 +452,7 @@ Evolusi: pindahkan object storage dari local protected files ke managed bucket l
 | Network | HTTPS origin, outbound HTTPS443 ke storage/monitoring, reverse proxy benar, request limits configurable | WA link tidak perlu server call; CMS/operations tetap butuh external access |
 | Files/storage | Private directory di luar document root, write rights minimum, quota dan backup; public derivatives terpisah | Evidence tidak boleh tersaji statis publik |
 | Secrets | Environment variables privat, tidak served sebagai `.env`, logs limited access | Config runtime/server |
-| Deployment | SFTP/SSH atau artifact upload aman, restart controllable, migrations one-shot, release rollback | Build Linux CI, bukan build berat di shared host |
+| Deployment | SFTP/SSH atau artifact upload aman, restart controllable, migrations one-shot, release rollback | Artifact dibuat pada lingkungan build Linux lokal yang sesuai produksi, bukan build berat di shared host |
 | Recovery | Offsite DB/media backup harian, export/import tersedia dan restore dibuktikan | RPO/RTO R1 |
 | Monitoring | Log akses aplikasi, uptime external, resource/cron/quota metrics | Kegagalan dapat diketahui dan direspons |
 
@@ -487,7 +487,7 @@ Environment development/staging/production terpisah database, storage, nomor WA 
 | Gateway server key/provider/merchant | Secret R2 | Sandbox/production separated |
 | Email API credentials | Secret jika digunakan | Verified sender/SPF/DKIM/DMARC, delivery logs redacted |
 
-Pipeline: lint → typecheck → domain/integration/E2E rilis terkait → security/dependency check → production build → artifact integrity → backup/preflight → compatible migration → deploy/switch runtime → health/SEO/auth smoke → monitoring window. Failure: rollback previous artifact; DB schema rollback hanya jika aman, utamakan expand/contract dan forward fix. Destructive migration tidak dilakukan otomatis pada switch release.
+Urutan script validasi dan rilis lokal: lint → typecheck → domain/integration/E2E rilis terkait → security/dependency check → production build → artifact integrity → backup/preflight → compatible migration → deploy/switch runtime → health/SEO/auth smoke → monitoring window. Hasil perintah dan artifact checksum dicatat pada PR/release; GitHub Actions tidak digunakan. Failure: rollback previous artifact; DB schema rollback hanya jika aman, utamakan expand/contract dan forward fix. Destructive migration tidak dilakukan otomatis pada switch release.
 
 Build flags rilis dan server settings harus konsisten; server menolak fundraising mutation jika gate disabled sekalipun artifact memuat future code. Untuk R1 API payment routes di-exclude/conditional registration sehingga direct request404. Migration R2 dilakukan terpisah ketika development R2; tidak menambah seluruh tabel finance pada DB R1 tanpa kebutuhan.
 

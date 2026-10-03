@@ -38,7 +38,7 @@ Inventaris [ASSET_INVENTORY.csv](ASSET_INVENTORY.csv) mengidentifikasi berkas se
 
 ## Batas dan pekerjaan berikutnya
 
-Tidak ada Nuxt app/CI, uji browser aplikasi, load test hosting, sandbox gateway, restore produksi, review legal final, atau persetujuan accountant yang dijalankan pada pekerjaan dokumentasi ini. Struktur link/ID tidak membuktikan bebas gap semantik atau bug. Mermaid tersimpan sebagai source; rendering diagram di panel belum diverifikasi otomatis.
+Tidak ada Nuxt app, uji browser aplikasi, load test hosting, sandbox gateway, restore produksi, review legal final, atau persetujuan accountant yang dijalankan pada pekerjaan dokumentasi ini. Struktur link/ID tidak membuktikan bebas gap semantik atau bug. Mermaid tersimpan sebagai source; rendering diagram di panel belum diverifikasi otomatis.
 
 Owner perlu menyelesaikan [register keputusan dan gate](DECISIONS.md). Saat implementasi, eksekusi [skenario penerimaan](TRACEABILITY.md) sesuai rilis dan simpan bukti hasil aktual. Sumber resmi serta batas verifikasi tersedia pada [EVIDENCE](EVIDENCE.md).
 

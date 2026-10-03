@@ -38,11 +38,11 @@ Periksa staged diff, bukan hanya working tree. Jangan commit `.env`, token, priv
 
 Buka PR dengan base `main`, judul yang menjelaskan hasil perubahan, dan deskripsi mengikuti template. Jelaskan masalah, perilaku sesudah perubahan, scope, validasi aktual, serta risiko/dependency yang material. Kaitkan requirement atau keputusan jika relevan. Jangan mencentang pengujian yang belum dijalankan.
 
-Check `Validate documentation` harus lulus. CI menggunakan permission read-only dan tidak menerima secret untuk menjalankan kode PR. Pengujian aplikasi ditambahkan ketika aplikasi tersedia; pipeline saat ini tidak mengklaim menjalankan Nuxt.
+GitHub Actions tidak digunakan, sesuai keputusan pemilik pada 3 Oktober 2026. Jalankan pemeriksaan secara lokal dan tulis perintah serta hasil aktual pada deskripsi PR. Validator dokumentasi, whitespace berkas yang diubah, dan reproduksibilitas inventaris/laporan dari checkout commit bersih harus lulus sebelum merge. Pengujian aplikasi ditambahkan ketika aplikasi tersedia; validasi dokumentasi tidak mengklaim menjalankan Nuxt.
 
 ## Review dan merge
 
-Semua perubahan harus melalui PR. Branch protection pada GitHub merupakan penegakan server; file panduan sendiri tidak memblokir direct push. Konfigurasi yang dituju: PR wajib, check dokumentasi wajib dengan branch mutakhir, percakapan diselesaikan, riwayat linear, tanpa force push/delete `main`, dan berlaku juga bagi admin. Pada repository dengan satu maintainer, approval orang kedua tidak dipaksakan; keputusan merge tetap harus dilakukan pihak berwenang.
+Semua perubahan harus melalui PR. Branch protection pada GitHub merupakan penegakan server; file panduan sendiri tidak memblokir direct push. Konfigurasi yang dituju: PR wajib, percakapan diselesaikan, riwayat linear, tanpa force push/delete `main`, dan berlaku juga bagi admin. Tidak ada required status check GitHub Actions; hasil validasi lokal ditinjau pada PR. Pada repository dengan satu maintainer, approval orang kedua tidak dipaksakan; keputusan merge tetap harus dilakukan pihak berwenang.
 
 Merge setelah validasi dan review selesai serta pemilik memberi otorisasi. Gunakan squash merge agar `main` mempunyai commit yang menggambarkan satu perubahan. Hapus branch remote sesudah merge jika tidak lagi dibutuhkan. Jangan merge otomatis hanya karena PR sudah dibuat.
 
