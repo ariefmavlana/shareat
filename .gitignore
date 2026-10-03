@@ -1,0 +1,33 @@
+# Dependencies and generated application output
+node_modules/
+.nuxt/
+.output/
+dist/
+coverage/
+test-results/
+playwright-report/
+.sass-cache/
+
+# Local secrets and legacy PHP contact configuration
+.env
+.env.*
+!.env.example
+referensi/assets/php/
+*.pem
+*.key
+
+# Local agent state and machine artifacts
+.codex/
+.agents/
+.aws/
+__pycache__/
+*.py[cod]
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Temporary review and export files
+*.tmp
+*.bak
