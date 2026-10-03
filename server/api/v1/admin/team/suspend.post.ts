@@ -4,6 +4,11 @@ import { randomUUID } from 'node:crypto'
 import { api, body } from '../../../../utils/http'
 import { requireAuth } from '../../../../utils/auth'
 import { database } from '../../../../db/client'
+import { lockIdentityLifecycle } from '../../../../db/locks'
+import {
+  revokeUserChallenges,
+  revokeOrganizationChallenges,
+} from '../../../../modules/identity/lifecycle'
 import {
   users,
   organizations,
@@ -26,13 +31,23 @@ export default api(async (event) => {
       statusMessage: 'Tidak dapat menangguhkan akses sendiri',
     })
   await database().transaction(async (tx) => {
+    await lockIdentityLifecycle(tx)
     if (input.type === 'user') {
+      const [user] = await tx.select().from(users).where(eq(users.id, input.id))
+      if (!user) throw createError({ statusCode: 404 })
+      await revokeUserChallenges(tx, user.id, user.email)
       await tx
         .update(users)
         .set({ suspended: true })
         .where(eq(users.id, input.id))
       await tx.delete(sessions).where(eq(sessions.userId, input.id))
     } else {
+      const [org] = await tx
+        .select()
+        .from(organizations)
+        .where(eq(organizations.id, input.id))
+      if (!org) throw createError({ statusCode: 404 })
+      await revokeOrganizationChallenges(tx, org.id)
       await tx
         .update(organizations)
         .set({ suspended: true, verified: false })

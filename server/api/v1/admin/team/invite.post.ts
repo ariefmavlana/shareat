@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm'
 import { api, body } from '../../../../utils/http'
 import { requireAuth } from '../../../../utils/auth'
 import { database } from '../../../../db/client'
+import { lockIdentityLifecycle } from '../../../../db/locks'
 import {
   organizations,
   users,
@@ -43,6 +44,13 @@ export default api(async (event) => {
   const value = token(),
     id = randomUUID()
   await database().transaction(async (tx) => {
+    await lockIdentityLifecycle(tx)
+    const [currentOrg] = await tx
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, input.organizationId))
+    if (!currentOrg?.verified || currentOrg.suspended)
+      throw createError({ statusCode: 422 })
     await tx.insert(authChallenges).values({
       id,
       tokenHash: digest(value),

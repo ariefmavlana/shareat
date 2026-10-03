@@ -119,18 +119,21 @@ export async function requireAuth(
   }
   return result.actor
 }
-export async function issueSession(event: H3Event, userId: string) {
+type IdentityExecutor = Pick<ReturnType<typeof database>, 'insert' | 'delete'>
+export async function issueSession(
+  event: H3Event,
+  userId: string,
+  executor: IdentityExecutor = database(),
+) {
   const value = token()
   const csrf = token()
-  await database()
-    .insert(sessions)
-    .values({
-      hash: digest(value),
-      userId,
-      csrfHash: digest(csrf),
-      expiresAt: new Date(Date.now() + 8 * 3600000),
-      idleAt: new Date(Date.now() + 30 * 60000),
-    })
+  await executor.insert(sessions).values({
+    hash: digest(value),
+    userId,
+    csrfHash: digest(csrf),
+    expiresAt: new Date(Date.now() + 8 * 3600000),
+    idleAt: new Date(Date.now() + 30 * 60000),
+  })
   const secure = process.env.NUXT_APP_MODE === 'production'
   setCookie(event, cookieName(), value, {
     httpOnly: true,
@@ -148,12 +151,13 @@ export async function issueSession(event: H3Event, userId: string) {
   })
   return { csrf }
 }
-export async function endSession(event: H3Event) {
+export async function endSession(
+  event: H3Event,
+  executor: IdentityExecutor = database(),
+) {
   const value = getCookie(event, cookieName())
   if (value)
-    await database()
-      .delete(sessions)
-      .where(eq(sessions.hash, digest(value)))
+    await executor.delete(sessions).where(eq(sessions.hash, digest(value)))
   deleteCookie(event, cookieName(), { path: '/' })
   deleteCookie(event, 'shareat_csrf', { path: '/' })
 }

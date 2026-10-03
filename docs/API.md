@@ -47,7 +47,7 @@ Public DTO: id/kind/slug/title/summary/paragraphs/programSlug/location/activityS
 | POST `/auth/enroll` | `{token,password}` invite/recovery valid, password≥12; enrollment5 menit dan secret/URI hanya untuk pemegang token |
 | POST `/auth/activate` | `{token,totp}` atomic consume, organization aktif; tidak menerbitkan session, login tetap diperlukan |
 
-Tidak ada public signup, endpoint MFA terpisah, donor account, reset email, atau recovery bypass. Bootstrap lewat CLI privat. Recovery proposal membutuhkan dua admin berbeda yang bukan akun target.
+Tidak ada public signup, endpoint MFA terpisah, donor account, reset email, atau recovery bypass. Bootstrap lewat CLI privat. Recovery proposal membutuhkan dua admin berbeda yang bukan akun target. Persetujuan recovery baru mencabut token target sebelumnya; suspend user/organisasi mencabut invite/recovery terkait beserta payload privat. Token yang dicabut ditolak400 pada enroll/activate. Pemeriksaan dan pencabutan lifecycle terserialisasi dalam transaksi lintas worker; login yang menggunakan kredensial berubah atau akun ditangguhkan ditolak401.
 
 ## CMS
 

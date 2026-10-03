@@ -4,6 +4,8 @@ import { eq, sql } from 'drizzle-orm'
 import { api } from '../../../../../utils/http'
 import { requireAuth } from '../../../../../utils/auth'
 import { database } from '../../../../../db/client'
+import { lockIdentityLifecycle } from '../../../../../db/locks'
+import { revokeUserChallenges } from '../../../../../modules/identity/lifecycle'
 import {
   proposals,
   settings,
@@ -19,6 +21,7 @@ export default api(async (event) => {
   const actor = await requireAuth(event, true, ['admin'])
   const id = getRouterParam(event, 'id') ?? ''
   return database().transaction(async (tx) => {
+    await lockIdentityLifecycle(tx)
     const [row] = await tx
       .select()
       .from(proposals)
@@ -55,6 +58,7 @@ export default api(async (event) => {
         })
       const [user] = await tx.select().from(users).where(eq(users.id, userId))
       if (!user) throw createError({ statusCode: 404 })
+      await revokeUserChallenges(tx, user.id, user.email)
       recoveryToken = token()
       await tx.delete(sessions).where(eq(sessions.userId, user.id))
       await tx

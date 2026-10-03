@@ -18,7 +18,7 @@
 | FR-010 | P-05 | R1 | C-03 | TC-010 | Mitra verified submit scoped; organisasi lain/suspended ditolak, sessions revoked |
 | FR-011 | P-05 | R1 | C-02 | TC-011 | Self review denied, checklist missing denied; publish atomic; archive purge origin/CDN+sitemap |
 | FR-012 | P-03 | R1 | C-04 | TC-012 | MIME spoof/oversize/SVG/scan unavailable denied; rights+EXIF+private URL and object ACL checked |
-| FR-013 | P-10 | R1 | C-03 | TC-013 | Login/MFA/CSRF/session rotation/revoke/throttle/recovery; cross-org/private read denied |
+| FR-013 | P-10 | R1 | C-03 | TC-013 | Login/MFA/CSRF/session rotation/revoke/throttle/recovery; revoked/superseded tokens denied, concurrent lifecycle serialized; cross-org/private read denied |
 | FR-014 | P-05 | R1 | C-07 | TC-014 | Role/contact/publish/download logs complete and redacted; editor log mutation denied |
 | FR-015 | P-07 | R1 | C-06 | TC-015 | Inspect raw HTML/status/head/JSON-LD/sitemap/noindex; no JS crawler and no private data |
 | FR-016 | P-07 | R1 | C-06 | TC-016 | Native share denial/unsupported falls back copy canonical; OG public approved image loads |

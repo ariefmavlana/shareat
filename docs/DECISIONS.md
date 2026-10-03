@@ -117,6 +117,8 @@ Tanggung jawab owner produk adalah menyetujui kebutuhan bisnis dan kebijakan. Pe
 | ADR-21 | Konten demo editable dan nomor sementara sesuai U-07; prod menolak demo | Preview bukan bukti kegiatan nyata atau review legal. Gate produksi tetap blocking |
 | ADR-22 | PostgreSQL18 + Drizzle/node-postgres pg8.23.1; JSONB/timestamptz, FK/row lock/upsert/RETURNING | Mengikuti U-08; provider harus mendukung PostgreSQL atau koneksi eksternal TLS. Baseline SQL preview dibentuk ulang sebelum merge; export/import lokal preservasi data, old session/challenge dicabut. Bukan migrator in-place produksi |
 
+Review sebelum merge 3 Oktober 2026 memperketat ADR-17: recovery baru dan penangguhan mencabut challenge terkait beserta payload; enrollment/activation/login commit dan pencabutan memakai PostgreSQL advisory transaction lock lintas worker. Ini memperbaiki token lama yang dapat mengaktifkan kembali akun, tanpa mengubah scope R1/R2. Bukti regression dicatat pada IMPLEMENTATION.
+
 Tanggal keputusan teknis: 3 Oktober 2026. Pilihan yang mengubah kontrak sudah diselaraskan pada SRS/SDD/API/traceability. Pemeriksaan lokal membuktikan bagian yang terukur; external operator/legal/hosting readiness tetap terbuka.
 
 Dependency audit preview: npm melaporkan 15 advisori transitif (11 high, 4 moderate). Tidak melakukan downgrade Nuxt major atau force audit fix tanpa compatibility review. [IMPLEMENTATION](IMPLEMENTATION.md) mencatat analisis artifact dan sisa risiko. NFR-003 menghalangi release bila temuan tinggi/kritis dapat dieksploitasi; review dependency serta upstream fix menjadi gate sebelum produksi.

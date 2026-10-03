@@ -423,6 +423,19 @@ test.describe
     expect(
       (await guest.get('/api/v1/admin/content/' + record.id)).status(),
     ).toBe(403)
+    const pendingInviteResponse = await editor.post(
+      '/api/v1/admin/team/invite',
+      {
+        headers,
+        data: {
+          email: 'pending-' + suffix + '@shareat.example',
+          organizationId: org.id,
+          roles: ['partner_editor'],
+        },
+      },
+    )
+    expect(pendingInviteResponse.status()).toBe(200)
+    const pendingInvite = await pendingInviteResponse.json()
     expect(
       (
         await editor.post('/api/v1/admin/team/suspend', {
@@ -436,6 +449,17 @@ test.describe
       ).status(),
     ).toBe(200)
     expect((await guest.get('/api/v1/auth/me')).status()).toBe(401)
+    expect(
+      (
+        await guest.post('/api/v1/auth/enroll', {
+          headers: { origin: baseURL },
+          data: {
+            token: pendingInvite.token,
+            password: 'suspended-organization-password-123',
+          },
+        })
+      ).status(),
+    ).toBe(400)
     await guest.dispose()
   })
   test('slug changes keep one-hop redirects and concurrent writes cannot overwrite', async () => {
@@ -585,6 +609,83 @@ test.describe
       ).status(),
     ).toBe(200)
     expect((await guest.get('/api/v1/auth/me')).status()).toBe(401)
+    async function recoverAgain() {
+      const proposed = await editor.post('/api/v1/admin/team/recovery', {
+        headers,
+        data: {
+          userId: user.id,
+          reason: 'Pemulihan ulang fixture untuk memeriksa pencabutan token.',
+        },
+      })
+      expect(proposed.status()).toBe(200)
+      const proposal = await proposed.json()
+      const approved = await reviewer.post(
+        '/api/v1/admin/settings/' + proposal.id + '/approve',
+        { headers: reviewHeaders },
+      )
+      expect(approved.status()).toBe(200)
+      return (await approved.json()).recoveryToken as string
+    }
+    const olderToken = await recoverAgain()
+    const olderEnrollment = await guest.post('/api/v1/auth/enroll', {
+      headers: { origin: baseURL },
+      data: { token: olderToken, password: 'superseded-local-password-789' },
+    })
+    expect(olderEnrollment.status()).toBe(200)
+    const olderSecret = (await olderEnrollment.json()).secret
+    const latestToken = await recoverAgain()
+    expect(
+      (
+        await guest.post('/api/v1/auth/activate', {
+          headers: { origin: baseURL },
+          data: {
+            token: olderToken,
+            totp: await generate({ secret: olderSecret }),
+          },
+        })
+      ).status(),
+    ).toBe(400)
+    const latestEnrollment = await guest.post('/api/v1/auth/enroll', {
+      headers: { origin: baseURL },
+      data: { token: latestToken, password: 'revoked-local-password-789' },
+    })
+    expect(latestEnrollment.status()).toBe(200)
+    const latestSecret = (await latestEnrollment.json()).secret
+    expect(
+      (
+        await editor.post('/api/v1/admin/team/suspend', {
+          headers,
+          data: {
+            type: 'user',
+            id: user.id,
+            reason: 'Pencabutan akses setelah token pemulihan diterbitkan.',
+          },
+        })
+      ).status(),
+    ).toBe(200)
+    expect(
+      (
+        await guest.post('/api/v1/auth/activate', {
+          headers: { origin: baseURL },
+          data: {
+            token: latestToken,
+            totp: await generate({ secret: latestSecret }),
+          },
+        })
+      ).status(),
+    ).toBe(400)
+    expect(
+      (
+        await guest.post('/api/v1/auth/enroll', {
+          headers: { origin: baseURL },
+          data: { token: latestToken, password: 'revoked-local-password-789' },
+        })
+      ).status(),
+    ).toBe(400)
+    const finalTeam = await (await editor.get('/api/v1/admin/team')).json()
+    expect(
+      finalTeam.users.find((u: { id: string }) => u.id === user.id).suspended,
+    ).toBe(true)
     await guest.dispose()
   })
   test('CMS renders scoped lists and private editor without runtime errors', async ({

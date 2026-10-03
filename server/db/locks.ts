@@ -9,3 +9,10 @@ export async function lockContentSlugs(tx: Transaction) {
     sql`SELECT pg_advisory_xact_lock(hashtext('shareat-content-slug'))`,
   )
 }
+
+export async function lockIdentityLifecycle(tx: Transaction) {
+  // Serialize token activation with revocation across all Node workers.
+  await tx.execute(
+    sql`SELECT pg_advisory_xact_lock(hashtext('shareat-identity-lifecycle'))`,
+  )
+}

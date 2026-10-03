@@ -3,6 +3,11 @@ import { randomUUID } from 'node:crypto'
 import { and, eq, inArray, sql } from 'drizzle-orm'
 import type { H3Event } from 'h3'
 import { database, closeDatabase } from '../../server/db/client'
+import { lockIdentityLifecycle } from '../../server/db/locks'
+import {
+  revokeUserChallenges,
+  revokeOrganizationChallenges,
+} from '../../server/modules/identity/lifecycle'
 import {
   organizations,
   users,
@@ -13,6 +18,7 @@ import {
   rateLimits,
   redirects,
   settings,
+  authChallenges,
 } from '../../server/db/schema'
 import { postgresContentRepository } from '../../server/modules/content/postgres-repository'
 import { ContentService } from '../../server/modules/content/service'
@@ -344,6 +350,81 @@ describe('PostgreSQL persistence invariants', () => {
     } finally {
       await creation
       await database().delete(redirects).where(eq(redirects.fromPath, path))
+    }
+  })
+  it('serializes identity revocation before activation and scrubs only matching challenges', async () => {
+    const challengeIds = [randomUUID(), randomUUID(), randomUUID()]
+    let activation: Promise<void> | undefined
+    let consumed: boolean | undefined
+    const db = database()
+    await db.insert(authChallenges).values(
+      challengeIds.map((id, i) => ({
+        id,
+        tokenHash: digest(id),
+        kind: i === 0 ? 'recovery' : 'invite',
+        payload: {
+          email:
+            i === 1 ? editorId + '@shareat.example' : 'other@shareat.example',
+          userId: i === 0 ? editorId : undefined,
+          organizationId: i < 2 ? org : 'unrelated',
+          mfaCipher: 'private-fixture',
+          passwordHash: 'private-fixture',
+        },
+        expiresAt: new Date(Date.now() + 60000),
+      })),
+    )
+    try {
+      await db.transaction(async (tx) => {
+        await lockIdentityLifecycle(tx)
+        activation = db.transaction(async (other) => {
+          await lockIdentityLifecycle(other)
+          const [row] = await other
+            .select()
+            .from(authChallenges)
+            .where(eq(authChallenges.id, challengeIds[0]!))
+          consumed = row?.consumed
+        })
+        const deadline = Date.now() + 2000
+        while (true) {
+          const wait = await db.execute(
+            sql`SELECT EXISTS (SELECT 1 FROM pg_locks l JOIN pg_stat_activity a ON a.pid=l.pid WHERE l.locktype='advisory' AND NOT l.granted AND a.datname=current_database() AND a.application_name='shareat-r1') waiting`,
+          )
+          if (wait.rows[0]?.waiting) break
+          if (Date.now() > deadline)
+            throw new Error(
+              'Activation did not wait for identity lifecycle lock',
+            )
+          await new Promise((resolve) => setTimeout(resolve, 10))
+        }
+        await revokeUserChallenges(tx, editorId, editorId + '@shareat.example')
+      })
+      await activation
+      expect(consumed).toBe(true)
+      const rows = await db
+        .select()
+        .from(authChallenges)
+        .where(inArray(authChallenges.id, challengeIds))
+      for (const id of challengeIds.slice(0, 2)) {
+        const row = rows.find((r) => r.id === id)!
+        expect(row.consumed).toBe(true)
+        expect(row.payload).toEqual({})
+      }
+      expect(rows.find((r) => r.id === challengeIds[2])?.consumed).toBe(false)
+      await db.transaction(async (tx) => {
+        await lockIdentityLifecycle(tx)
+        await revokeOrganizationChallenges(tx, 'unrelated')
+      })
+      const [last] = await db
+        .select()
+        .from(authChallenges)
+        .where(eq(authChallenges.id, challengeIds[2]!))
+      expect(last?.consumed).toBe(true)
+      expect(last?.payload).toEqual({})
+    } finally {
+      await activation
+      await db
+        .delete(authChallenges)
+        .where(inArray(authChallenges.id, challengeIds))
     }
   })
   it('lets independent workers skip a locked outbox row', async () => {

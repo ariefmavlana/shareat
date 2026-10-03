@@ -5,6 +5,7 @@ import { verify } from 'otplib'
 import { api, body, requireOrigin } from '../../../utils/http'
 import { rateLimit, networkKey } from '../../../utils/auth'
 import { database } from '../../../db/client'
+import { lockIdentityLifecycle } from '../../../db/locks'
 import {
   authChallenges,
   users,
@@ -24,6 +25,7 @@ export default api(async (event) => {
   await rateLimit(event, 'activate:' + networkKey(event), 10)
   const input = await body(event, schema)
   return database().transaction(async (tx) => {
+    await lockIdentityLifecycle(tx)
     const [row] = await tx
       .select()
       .from(authChallenges)

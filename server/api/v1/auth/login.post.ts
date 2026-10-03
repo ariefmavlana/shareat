@@ -3,6 +3,7 @@ import { eq, and, gt } from 'drizzle-orm'
 import { verify } from 'otplib'
 import { api, body, requireOrigin } from '../../../utils/http'
 import { database } from '../../../db/client'
+import { lockIdentityLifecycle } from '../../../db/locks'
 import { users, organizations, auditLogs } from '../../../db/schema'
 import {
   decrypt,
@@ -59,35 +60,55 @@ export default api(async (event) => {
       statusCode: 401,
       statusMessage: 'Data masuk tidak valid',
     })
-  const result = await db
-    .update(users)
-    .set({ lastTotpStep: valid.timeStep })
-    .where(
-      and(
-        eq(users.id, row.user.id),
-        gt(users.lastTotpStep, -1),
-        eq(users.lastTotpStep, row.user.lastTotpStep),
-      ),
+  return db.transaction(async (tx) => {
+    await lockIdentityLifecycle(tx)
+    const [current] = await tx
+      .select({ user: users, org: organizations })
+      .from(users)
+      .innerJoin(organizations, eq(users.organizationId, organizations.id))
+      .where(eq(users.id, row.user.id))
+    if (
+      !current ||
+      current.user.suspended ||
+      current.org.suspended ||
+      !current.org.verified ||
+      current.user.passwordHash !== row.user.passwordHash ||
+      current.user.mfaCipher !== row.user.mfaCipher
     )
-    .returning({ id: users.id })
-  if (result.length !== 1)
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Data masuk tidak valid',
+      throw createError({
+        statusCode: 401,
+        statusMessage: 'Data masuk tidak valid',
+      })
+    const result = await tx
+      .update(users)
+      .set({ lastTotpStep: valid.timeStep })
+      .where(
+        and(
+          eq(users.id, row.user.id),
+          gt(users.lastTotpStep, -1),
+          eq(users.lastTotpStep, row.user.lastTotpStep),
+        ),
+      )
+      .returning({ id: users.id })
+    if (result.length !== 1)
+      throw createError({
+        statusCode: 401,
+        statusMessage: 'Data masuk tidak valid',
+      })
+    await endSession(event, tx)
+    const session = await issueSession(event, row.user.id, tx)
+    await tx.insert(auditLogs).values({
+      id: randomUUID(),
+      actorId: row.user.id,
+      action: 'auth.login',
+      targetId: row.user.id,
+      requestId: event.context.requestId,
+      safeChange: {},
+      createdAt: new Date(),
     })
-  await endSession(event)
-  const session = await issueSession(event, row.user.id)
-  await db.insert(auditLogs).values({
-    id: randomUUID(),
-    actorId: row.user.id,
-    action: 'auth.login',
-    targetId: row.user.id,
-    requestId: event.context.requestId,
-    safeChange: {},
-    createdAt: new Date(),
+    return {
+      ...session,
+      user: { id: row.user.id, email: row.user.email, roles: row.user.roles },
+    }
   })
-  return {
-    ...session,
-    user: { id: row.user.id, email: row.user.email, roles: row.user.roles },
-  }
 })
