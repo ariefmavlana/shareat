@@ -18,13 +18,15 @@ const fail = (statusCode: number, statusMessage: string): never => {
 const has = (a: Actor, ...roles: string[]) =>
   roles.some((role) => a.roles.includes(role))
 export const isAuditor = (a: Actor) => a.roles.includes('auditor')
+export const isReadOnlyStaff = (a: Actor) =>
+  isAuditor(a) || a.roles.includes('operator')
 const isFullTeamEditor = (a: Actor) => has(a, 'editor')
-export function assertNotAuditor(actor: Actor) {
-  if (isAuditor(actor) || actor.roles.includes('operator'))
-    fail(403, 'Auditor dan operator bersifat baca saja')
+export function assertWriteAllowed(actor: Actor) {
+  if (isReadOnlyStaff(actor))
+    fail(403, 'Peran ini bersifat baca saja dan tidak dapat mengubah konten')
 }
 export function assertEdit(actor: Actor, record?: ContentRecord) {
-  assertNotAuditor(actor)
+  assertWriteAllowed(actor)
   if (!actor.verified || !has(actor, 'editor', 'partner_editor'))
     fail(403, 'Akses ditolak')
   if (
@@ -244,7 +246,9 @@ export class ContentService {
   async privateDetail(actor: Actor, id: string) {
     const record = await this.repo.get(id)
     if (!record) return fail(404, 'Konten tidak ditemukan')
-    if (!has(actor, 'reviewer', 'admin', 'editor', 'auditor', 'operator'))
+    // Auditor pane works per entity, so auditor reads any record; operator
+    // keeps its contact and proposal duty and does not gain content scope.
+    if (!has(actor, 'reviewer', 'admin', 'editor', 'auditor'))
       assertEdit(actor, record)
     return record
   }
@@ -252,14 +256,7 @@ export class ContentService {
     actor: Actor,
     query: { page: number; kind?: ContentKind } = { page: 1 },
   ) {
-    const unrestricted = has(
-      actor,
-      'reviewer',
-      'admin',
-      'editor',
-      'auditor',
-      'operator',
-    )
+    const unrestricted = has(actor, 'reviewer', 'admin', 'editor', 'auditor')
     if (!unrestricted) assertEdit(actor)
     if (!unrestricted && query.kind && query.kind !== 'initiative')
       return { items: [], page: query.page, pages: 1, total: 0 }

@@ -1,4 +1,4 @@
-import { getRequestURL } from 'h3'
+import { getRequestURL, setResponseHeader } from 'h3'
 
 const readOnlyPaths = [
   '/api/v1/public/',
@@ -15,9 +15,9 @@ export default defineEventHandler((event) => {
     (prefix) => path === prefix || path.startsWith(prefix),
   )
   if (!readOnly) return
+  setResponseHeader(event, 'allow', 'GET, HEAD')
   throw createError({
     statusCode: 405,
     statusMessage: 'Metode tidak didukung',
-    headers: { allow: 'GET, HEAD' },
   })
 })

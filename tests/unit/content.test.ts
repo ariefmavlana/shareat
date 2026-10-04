@@ -171,15 +171,24 @@ describe('Editorial policy', () => {
       ).rejects.toMatchObject({ statusCode: 403 })
     }
   })
-  it('lets auditor and operator read any record without being able to change it', async () => {
+  it('lets auditor and partner editors read, while operator stays out of content', async () => {
     const service = new ContentService(createMemoryRepository())
     const item = await service.create(editor, 'initiative', body)
+    for (const roles of [['auditor'], ['partner_editor']]) {
+      const reader =
+        roles[0] === 'partner_editor'
+          ? { ...editor, roles }
+          : { ...reviewer, roles }
+      expect((await service.privateDetail(reader, item.id)).id).toBe(item.id)
+      expect((await service.privateList(reader, { page: 1 })).total).toBe(1)
+    }
+    const operator = { ...editor, roles: ['operator'] }
+    await expect(
+      service.privateDetail(operator, item.id),
+    ).rejects.toMatchObject({ statusCode: 403 })
     for (const roles of [['auditor'], ['operator']]) {
-      const readOnly = { ...reviewer, roles }
-      expect((await service.privateDetail(readOnly, item.id)).id).toBe(item.id)
-      expect((await service.privateList(readOnly, { page: 1 })).total).toBe(1)
       await expect(
-        service.transition(readOnly, item.id, 1, 'submit'),
+        service.transition({ ...reviewer, roles }, item.id, 1, 'submit'),
       ).rejects.toMatchObject({ statusCode: 403 })
     }
   })

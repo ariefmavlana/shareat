@@ -1,5 +1,10 @@
 import { ZodError } from 'zod'
-import { defineEventHandler, createError, getHeader } from 'h3'
+import {
+  defineEventHandler,
+  createError,
+  getHeader,
+  setResponseHeader,
+} from 'h3'
 import type { H3Event } from 'h3'
 import type { ZodType } from 'zod'
 export const api = <T>(fn: (event: H3Event) => Promise<T>) =>
@@ -95,11 +100,12 @@ export function requireOrigin(event: H3Event) {
 }
 export function requireMethod(event: H3Event, ...allowed: string[]) {
   const method = event.method.toUpperCase()
-  if (!allowed.includes(method))
+  if (!allowed.includes(method)) {
+    setResponseHeader(event, 'allow', [...allowed, 'HEAD'].join(', '))
     throw createError({
       statusCode: 405,
       statusMessage: 'Metode tidak didukung',
-      headers: { allow: [...allowed, 'HEAD'].join(', ') },
     })
+  }
 }
 export const READ_ONLY_METHODS = ['GET', 'HEAD']

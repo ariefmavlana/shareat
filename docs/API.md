@@ -55,7 +55,7 @@ Tidak ada public signup, endpoint MFA terpisah, donor account, reset email, atau
 
 | Method/path | Kontrak |
 | --- | --- |
-| GET `/admin/content` | Auth, querypage1..10000/kind. SQL pagination20/latest revision; partner initiative/org dibatasi sebelum query; auditor dan operator dapat membaca tanpa mengubah |
+| GET `/admin/content` | Auth, querypage1..10000/kind. SQL pagination20/latest revision; partner initiative/org dibatasi sebelum query; auditor dapat membaca; operator tidak diberi cakupan konten dan ditolak403 |
 | POST `/admin/content` | Editor verified, `{kind,slug?,body}`, owner dari server; editor mitra hanya initiative, admin/editor untuk kind lain |
 | GET `/admin/content/{id}` | Team sesuai role atau partner owner, riwayat privat termasuk email penulis/peninjau |
 | PUT `/admin/content/{id}` | `{version,body}`, append draft, stale409 |

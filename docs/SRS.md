@@ -23,7 +23,7 @@ Website/CMS, database, penyimpanan media, audit, dan pekerjaan terjadwal adalah 
 | Editor tim | Membuat/revisi semua konten sesuai penugasan | Menyusun kampanye dan pembaruan | Menyetujui revisi sendiri, memposting uang |
 | Editor mitra terverifikasi | Membuat/revisi inisiatif milik organisasi | Menyusun kampanye organisasi | Publikasi sendiri, mengakses organisasi lain, membuat program/cerita/halaman/FAQ, mengubah slug |
 | Reviewer tim | Memeriksa dan menerbitkan revisi pihak lain, menyetujui hak media, mengubah slug | Menyetujui kesiapan konten kampanye | Mengubah ledger atau menyalurkan dana, menerbitkan revisi yang belum ia setujui |
-| Operator support | Konten publik read only, mengusulkan dan menyetujui perubahan kontak yang diaudit | Data transaksi minimum sesuai kasus | Memposting pembayaran, melihat dokumen verifikasi tanpa kebutuhan, mengubah konten atau mengunggah media |
+| Operator support | Konten publik read only pada permukaan publik, mengusulkan dan menyetujui perubahan kontak yang diaudit | Data transaksi minimum sesuai kasus | Memposting pembayaran, melihat dokumen verifikasi tanpa kebutuhan, mengubah konten atau media, membaca daftar konten CMS |
 | Finance maker | Tidak diperlukan R1 | Rekonsiliasi, usulan payout/refund, laporan internal | Menyetujui usul sendiri |
 | Finance checker | Tidak diperlukan R1 | Menyetujui usul maker lain | Menjalankan usul yang dibuat identitas sama |
 | Auditor | Read only konten, media, dan audit sesuai izin | Laporan dan ledger read only | Mutation, termasuk unduhan media privat |

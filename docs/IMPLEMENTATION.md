@@ -152,7 +152,8 @@ Audit menyeluruh atas peran SRS, endpoint admin, dan UI CMS menemukan celah otor
 
 Perbaikan otorisasi:
 
-- Auditor sebelumnya lolos `assertEdit` karena hanya lima role pertama yang dikecualikan pada pemeriksaan baca, sehingga auditor bisa menulis konten bila ia mengajukan review sebagai penulis. Sekarang auditor dan operator bersifat baca saja pada seluruh mutation konten dan tidak dapat dijadikan peninjau. Pemeriksaan juga berlaku bila role baca-saja digabung dengan role lain.
+- Auditor sebelumnya lolos `assertEdit` karena hanya lima role pertama yang dikecualikan pada pemeriksaan baca, sehingga auditor bisa menulis konten bila ia mengajukan review sebagai penulis. Sekarang auditor dan operator baca-saja pada seluruh mutation konten dan tidak dapat dijadikan peninjau. Pemeriksaan juga berlaku bila role baca-saja digabung dengan role lain.
+- Auditor tetap dapat membaca daftar dan detail konten karena panel audit bekerja per entitas. Operator tidak diberi cakupan konten agar tetap least privilege: ia mengurus kontak dan usulan, bukan CMS.
 - Editor mitra sebelumnya hanya dibatasi pada `partner_editor`, sehingga `editor` atau `reviewer` yang digabungkan membuka akses ke seluruh organisasi. Sekarang `create` memakai aturan peran penuh, dan daftar media dibatasi ke organisasi pemilik untuk editor mitra.
 - Unggahan media dan perubahan slug menolak auditor dan operator dengan pesan yang jelas.
 - Operator tidak lagi memblokir dirinya sendiri: operator dapat mengusulkan sekaligus menyetujui perubahan kontak, tetapi tetap tidak boleh menyetujui usulan yang ia buat sendiri. Usulan recovery dan organisasi tetap eksklusif admin.
@@ -173,7 +174,7 @@ Dokumentasi diselaraskan: tabel peran SRS memuat larangan baca-saja, aturan pera
 Verifikasi pada artifact produksi yang dibangun ulang, DB compose dengan migrasi yang diterapkan:
 
 - `npm run lint`, `npm run typecheck`, `npm test`: lulus; unit test bertambah dari18 menjadi23 kasus untuk baca-saja auditor/operator, pembatasan kind editor mitra, dan pencatatan catatan review.
-- Skrip verifikasi peran (`.local/role-verify.mjs`) menjalankan akun admin, auditor, operator, dan editor mitra nyata terhadap server berjalan: 22/22 pemeriksaan lulus, mencakup baca, mutation yang ditolak, dan guard405.
+- Skrip verifikasi peran (`.local/role-verify.mjs`) menjalankan akun admin, auditor, operator, dan editor mitra nyata terhadap server berjalan: 22/22 pemeriksaan lulus, mencakup baca, mutation yang ditolak, dan guard405. Termasuk penolakan operator pada cakupan konten403 karena least privilege.
 - Skrip alur editorial (`.local/flow-verify.mjs`) menjalankan rantai lengkap dengan empat akun: 14/14 lulus, termasuk penolakan self-review403, permintaan revisi yang terlihat penulis, penolakan publish oleh reviewer lain409, publish oleh reviewer penyetuju, arsip dengan alasan, status410 setelah arsip, dan penolakan operator menyetujui usulannya sendiri403.
 - Pemeriksaan navigasi per peran: editor melihat Konten dan Media; auditor melihat Konten, Media, dan Audit; operator melihat Konten, Media, dan Kontak; tidak ada role yang melihat menu di luar kewenangannya.
 - `npx playwright test tests/e2e/public.spec.ts` 3/3 dan axe15 halaman bersih pada build yang sama.
