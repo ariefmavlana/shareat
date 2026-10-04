@@ -72,3 +72,7 @@ Kriteria lulus aplikasi dicatat per rilis dengan actual environment/version, inp
 ## Verifikasi persistence PostgreSQL
 
 U-08/ADR-22 dipetakan pada C-02/C-03/C-06/C-12 serta TC-003, TC-009, TC-011, TC-013, TC-014, TC-017, TC-043 dan TC-045. Unit konfigurasi dan suite [integrasi PostgreSQL](../tests/integration/postgres.test.ts) menguji TLS/URI, JSONB literal search/Unicode/order/demo, concurrent edit409, rollback publication, FK/unique, UTC milliseconds, upsert, CAS MFA, atomic rate limit, SKIP LOCKED, dan persaingan create/alias pada path yang belum ada. Bukti fresh migration, seed, cutover dan restore dicatat pada [IMPLEMENTATION](IMPLEMENTATION.md). Ini tidak menambah requirement baru atau menyatakan seluruh skenario TC tersebut telah selesai.
+
+## Pemetaan redesign 4 Oktober 2026
+
+FR-001/006 → layout, PageIntro, beranda, FAQ dan halaman CMS-backed; FR-003 → ContentCollection dan regresi filter/riwayat; FR-004/012 → ContentCard/ContentDetail dan prioritas turunan media published; FR-007/008 → topik kontak, copy feedback dan fallback Web; FR-020 → empty/error states; NFR-002 → reflow 320/768/1024/1440, drawer keyboard/focus dan axe. Skenario dijalankan melalui tests/e2e/public.spec.ts dan tests/e2e/redesign.spec.ts. Catatan hasil aktual serta keterbatasan ada di IMPLEMENTATION, bukan klaim seluruh gate produksi lulus.

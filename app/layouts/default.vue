@@ -1,11 +1,19 @@
 <script setup lang="ts">
-import { Menu, ArrowUpRight } from '@lucide/vue'
+import {
+  Menu,
+  Search,
+  ArrowUpRight,
+  ArrowRight,
+  Heart,
+  MessageCircle,
+} from '@lucide/vue'
 const { data } = await useSiteSettings()
+const route = useRoute()
 const links = [
   { to: '/program', label: 'Program' },
   { to: '/inisiatif', label: 'Inisiatif' },
+  { to: '/tentang', label: 'Tentang kami' },
   { to: '/cerita', label: 'Cerita' },
-  { to: '/tentang', label: 'Tentang' },
   { to: '/transparansi', label: 'Transparansi' },
 ]
 const mobileOpen = ref(false)
@@ -13,6 +21,12 @@ const mounted = ref(false)
 onMounted(() => {
   mounted.value = true
 })
+watch(
+  () => route.fullPath,
+  () => {
+    mobileOpen.value = false
+  },
+)
 </script>
 <template>
   <div>
@@ -23,13 +37,13 @@ onMounted(() => {
     >
     <div
       v-if="data?.demo"
-      class="bg-[#ede6d3] px-4 py-2 text-center text-xs text-[#62532e]"
+      class="border-b border-[#eadfc7] bg-[#fff7e7] px-4 py-2 text-center text-[11px] text-[#745627]"
     >
-      <strong>Mode demo.</strong> Kegiatan, identitas, dan cerita adalah contoh
-      yang bisa dikelola melalui CMS.
+      <strong class="mr-1">Mode demo</strong> · Kegiatan, identitas, dan cerita
+      adalah data contoh.
     </div>
-    <header class="border-b bg-background">
-      <div class="container flex min-h-24 items-center justify-between gap-5">
+    <header class="site-header">
+      <div class="container flex min-h-20 items-center justify-between gap-5">
         <BrandMark />
         <nav
           aria-label="Navigasi utama"
@@ -39,100 +53,145 @@ onMounted(() => {
             v-for="link in links"
             :key="link.to"
             :to="link.to"
-            class="py-3 text-sm font-medium text-muted-foreground hover:text-primary"
-            active-class="!text-primary"
+            class="nav-link"
             >{{ link.label }}</NuxtLink
           >
         </nav>
-        <div class="flex items-center gap-3">
-          <UiButton
-            as-child
-            variant="outline"
-            class="hidden min-h-11 rounded-full px-5 sm:inline-flex"
-            ><NuxtLink to="/kontak"
-              >Mari berbagi<ArrowUpRight class="size-4" /></NuxtLink></UiButton
-          ><UiSheet v-model:open="mobileOpen"
-            ><UiSheetTrigger as-child
+        <div class="flex items-center gap-2">
+          <NuxtLink
+            to="/cari"
+            aria-label="Cari informasi"
+            class="grid size-11 place-items-center rounded-full hover:bg-muted"
+            ><Search class="size-5" aria-hidden="true"
+          /></NuxtLink>
+          <NuxtLink
+            to="/kontak"
+            class="action-link hidden min-h-11 px-5 sm:inline-flex"
+            >Mari terhubung<ArrowUpRight class="size-4" aria-hidden="true"
+          /></NuxtLink>
+          <UiSheet v-model:open="mobileOpen">
+            <UiSheetTrigger as-child
               ><UiButton
                 variant="ghost"
                 aria-label="Buka menu navigasi"
                 :disabled="!mounted"
                 class="min-h-11 min-w-11 lg:hidden"
-                ><Menu class="size-6" /></UiButton></UiSheetTrigger
-            ><UiSheetContent
-              ><UiSheetHeader
+                ><Menu class="size-6" /></UiButton
+            ></UiSheetTrigger>
+            <UiSheetContent class="w-[min(90vw,390px)] overflow-y-auto">
+              <UiSheetHeader class="border-b px-6 pb-6 pt-8"
                 ><UiSheetTitle>Jelajahi Shareat</UiSheetTitle
                 ><UiSheetDescription
-                  >Program, informasi kegiatan, dan kontak
-                  tim.</UiSheetDescription
+                  >Temukan ruang untuk berbagi.</UiSheetDescription
                 ></UiSheetHeader
               >
-              <nav aria-label="Navigasi seluler" class="grid gap-2 px-4 py-8">
+              <nav aria-label="Navigasi seluler" class="grid gap-1 px-4">
                 <NuxtLink
                   v-for="link in [
+                    { to: '/', label: 'Beranda' },
                     ...links,
                     { to: '/faq', label: 'Pertanyaan umum' },
-                    { to: '/kontak', label: 'Hubungi tim' },
+                    { to: '/cari', label: 'Cari informasi' },
                   ]"
                   :key="link.to"
                   :to="link.to"
-                  class="rounded-lg px-4 py-3"
+                  class="mobile-nav-link"
                   @click="mobileOpen = false"
-                  >{{ link.label }}</NuxtLink
-                >
-              </nav></UiSheetContent
-            ></UiSheet
-          >
+                  >{{ link.label
+                  }}<ArrowUpRight class="size-4" aria-hidden="true"
+                /></NuxtLink>
+              </nav>
+              <div class="m-4 mt-auto rounded-xl bg-accent p-5">
+                <Heart class="mb-3 size-6 text-primary" aria-hidden="true" />
+                <p class="mb-4 text-sm">
+                  Punya pertanyaan atau ide kolaborasi?
+                </p>
+                <NuxtLink
+                  to="/kontak"
+                  class="action-link w-full"
+                  @click="mobileOpen = false"
+                  >Hubungi tim<ArrowRight class="size-4"
+                /></NuxtLink>
+              </div>
+            </UiSheetContent>
+          </UiSheet>
         </div>
       </div>
-      <noscript>Gunakan tautan navigasi pada bagian bawah halaman.</noscript>
+      <noscript
+        ><p class="container pb-3 text-sm">
+          Gunakan tautan navigasi pada bagian bawah halaman.
+        </p></noscript
+      >
     </header>
-    <main id="main-content"><slot /></main>
-    <footer class="mt-8 border-t">
-      <div class="container section grid gap-10 md:grid-cols-[2fr_1fr_1fr]">
+    <main id="main-content" tabindex="-1"><slot /></main>
+    <footer class="site-footer">
+      <div
+        class="container grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.2fr]"
+      >
         <div>
-          <BrandMark />
-          <p class="mt-5 max-w-sm text-sm text-muted-foreground">
-            Ruang untuk berbagi pangan, pengetahuan, dan buku. Bersama, membuka
-            lebih banyak kesempatan.
+          <BrandMark inverse />
+          <p class="mt-5 max-w-xs text-sm leading-7 text-[#c4d3de]">
+            Berbagi pangan, pengetahuan, dan buku. Membuka kesempatan melalui
+            kepedulian yang tumbuh bersama.
           </p>
-          <p class="mt-6 text-xs text-muted-foreground">
-            {{
-              data?.demo
-                ? 'Preview pengembangan · Data contoh'
-                : 'Informasi dan kolaborasi kemanusiaan'
-            }}
+          <p class="mt-7 flex items-center gap-2 text-xs text-aqua">
+            <Heart class="size-4" aria-hidden="true" />Berawal dari peduli.
+            Berlanjut bersama.
           </p>
         </div>
         <div>
-          <p class="mb-4 text-sm font-semibold">Jelajahi</p>
-          <nav
-            aria-label="Navigasi footer"
-            class="grid gap-3 text-sm text-muted-foreground"
-          >
-            <NuxtLink v-for="link in links" :key="link.to" :to="link.to">{{
-              link.label
-            }}</NuxtLink>
+          <p class="mb-4 text-sm font-bold">Kenali Shareat</p>
+          <nav aria-label="Navigasi footer">
+            <NuxtLink
+              v-for="link in links"
+              :key="link.to"
+              :to="link.to"
+              class="footer-link"
+              >{{ link.label }}</NuxtLink
+            >
           </nav>
         </div>
         <div>
-          <p class="mb-4 text-sm font-semibold">Informasi & bantuan</p>
-          <nav
-            aria-label="Bantuan dan kebijakan"
-            class="grid gap-3 text-sm text-muted-foreground"
-          >
-            <NuxtLink to="/faq">Pertanyaan umum</NuxtLink
-            ><NuxtLink to="/kontak">Hubungi tim</NuxtLink
-            ><NuxtLink to="/privasi">Kebijakan privasi</NuxtLink
-            ><NuxtLink to="/ketentuan">Ketentuan penggunaan</NuxtLink>
+          <p class="mb-4 text-sm font-bold">Informasi & bantuan</p>
+          <nav aria-label="Bantuan dan kebijakan">
+            <NuxtLink to="/faq" class="footer-link">Pertanyaan umum</NuxtLink
+            ><NuxtLink to="/kontak" class="footer-link">Hubungi tim</NuxtLink
+            ><NuxtLink to="/privasi" class="footer-link"
+              >Kebijakan privasi</NuxtLink
+            ><NuxtLink to="/ketentuan" class="footer-link"
+              >Ketentuan penggunaan</NuxtLink
+            ><NuxtLink to="/cari" class="footer-link">Pencarian</NuxtLink>
           </nav>
+        </div>
+        <div>
+          <p class="mb-4 text-sm font-bold">Mari buka percakapan</p>
+          <p class="text-sm leading-7 text-[#c4d3de]">
+            Langkah kecilmu bisa dimulai dengan sebuah pertanyaan.
+          </p>
+          <NuxtLink
+            to="/kontak"
+            class="mt-5 inline-flex min-h-12 items-center gap-3 rounded-lg border border-[#6c8b9c] px-4 text-sm font-bold text-aqua hover:bg-white/5"
+            ><MessageCircle class="size-4" aria-hidden="true" />Hubungi
+            tim<ArrowUpRight class="size-4" aria-hidden="true"
+          /></NuxtLink>
         </div>
       </div>
       <div
-        class="container flex flex-wrap justify-between gap-3 border-t py-6 text-xs text-muted-foreground"
+        class="container flex flex-wrap items-center justify-between gap-2 border-t border-white/15 py-5 text-[11px] text-[#c4d3de]"
       >
-        <p>Shareat · Berbagi kesempatan, menguatkan kemanusiaan.</p>
-        <NuxtLink to="/admin/login">Akses tim</NuxtLink>
+        <p>
+          Shareat ·
+          {{
+            data?.demo
+              ? 'Preview pengembangan — data contoh'
+              : 'Berbagi kesempatan, menguatkan kemanusiaan.'
+          }}
+        </p>
+        <NuxtLink
+          to="/admin/login"
+          class="inline-flex min-h-11 items-center gap-2"
+          >Akses tim<ArrowUpRight class="size-3" aria-hidden="true"
+        /></NuxtLink>
       </div>
     </footer>
   </div>

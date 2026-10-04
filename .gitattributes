@@ -8,6 +8,9 @@
 *.css text eol=lf
 *.scss text eol=lf
 *.js text eol=lf
+*.mjs text eol=lf
+*.ts text eol=lf
+*.vue text eol=lf
 *.csv text eol=lf
 *.png binary
 *.jpg binary
