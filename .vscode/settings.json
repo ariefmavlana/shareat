@@ -1,0 +1,18 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "eslint.validate": ["javascript", "typescript", "vue"],
+  "eslint.useFlatConfig": true,
+  "vue.server.hybridMode": true,
+  "files.eol": "\n",
+  "files.exclude": {
+    ".nuxt": true,
+    ".output": true
+  },
+  "search.exclude": {
+    ".nuxt": true,
+    ".output": true,
+    "node_modules": true
+  },
+  "typescript.tsdk": "node_modules/typescript/lib"
+}

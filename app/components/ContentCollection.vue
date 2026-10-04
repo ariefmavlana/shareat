@@ -163,7 +163,7 @@ function pageLink(page: number) {
         <button
           type="button"
           :aria-pressed="!route.query.program"
-          class="min-h-11 rounded-full border px-4 text-xs font-bold aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-white"
+          class="min-h-11 rounded-full border border-[#6f868c] px-4 text-xs font-bold aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-white"
           @click="chooseProgram('')"
         >
           Semua program
@@ -173,7 +173,7 @@ function pageLink(page: number) {
           :key="program.id"
           type="button"
           :aria-pressed="route.query.program === program.slug"
-          class="min-h-11 rounded-full border px-4 text-xs font-bold aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-white"
+          class="min-h-11 rounded-full border border-[#6f868c] px-4 text-xs font-bold aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-white"
           @click="chooseProgram(program.slug)"
         >
           {{ program.title }}

@@ -117,10 +117,8 @@ watch(
           </UiSheet>
         </div>
       </div>
-      <noscript
-        ><p class="container pb-3 text-sm">
-          Gunakan tautan navigasi pada bagian bawah halaman.
-        </p></noscript
+      <noscript class="container block pb-3 text-sm"
+        >Gunakan tautan navigasi pada bagian bawah halaman.</noscript
       >
     </header>
     <main id="main-content" tabindex="-1"><slot /></main>

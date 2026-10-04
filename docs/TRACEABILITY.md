@@ -76,3 +76,7 @@ U-08/ADR-22 dipetakan pada C-02/C-03/C-06/C-12 serta TC-003, TC-009, TC-011, TC-
 ## Pemetaan redesign 4 Oktober 2026
 
 FR-001/006 → layout, PageIntro, beranda, FAQ dan halaman CMS-backed; FR-003 → ContentCollection dan regresi filter/riwayat; FR-004/012 → ContentCard/ContentDetail dan prioritas turunan media published; FR-007/008 → topik kontak, copy feedback dan fallback Web; FR-020 → empty/error states; NFR-002 → reflow 320/768/1024/1440, drawer keyboard/focus dan axe. Skenario dijalankan melalui tests/e2e/public.spec.ts dan tests/e2e/redesign.spec.ts. Catatan hasil aktual serta keterbatasan ada di IMPLEMENTATION, bukan klaim seluruh gate produksi lulus.
+
+## Pemetaan hardening aksesibilitas 4 Oktober 2026
+
+NFR-002 → token kontras#0A5F62 untuk label dan tautan, `--color-control-border`#6F868C untuk batas kontrol SC 1.4.11, `letter-spacing` label pada rentang SC 1.4.12, indikator fokus footer, tautan lewati pada halaman kontak, serta audit axe diperluas ke15 halaman publik. FR-005/011 → PublicRecord pada halaman transparansi sebagai catatan proses yang dapat diperiksa, tanpa angka dampak. FR-018 → penandaan tautan eksternal membuka tab baru pada kontak. Struktur `dl` pada ContentDetail menyentuh NFR-002 semantik. Regresi hydration pada layout publik tidak memetakan requirement baru melainkan cacat SSR yang diperbaiki. Bukti perintah dan hasilnya ada di [IMPLEMENTATION](IMPLEMENTATION.md); perluasan axe belum menggantikan pengujian screen reader manual pada SRS NFR-002.

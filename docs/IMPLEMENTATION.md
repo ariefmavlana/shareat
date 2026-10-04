@@ -113,3 +113,35 @@ Validasi lokal source final:
 Pemeriksaan awal menemukan kontras aqua terlalu rendah pada krem/mint; token final digelapkan menjadi#086D70 dan suite axe diulang sampai lulus. Tes filter awal memakai locator label yang turut membaca option select; locator diganti memakai role combobox, lalu perilaku URL/back/reset terbukti lulus. Server development lama berhenti sebelum percobaan tes pertama; hasil yang dinyatakan lulus berasal dari container preview terpisah pada loopback3003. Tidak menjalankan tes CMS yang memodifikasi database kerja pada task UI ini.
 
 Screenshot lokal pada .data/redesign mencakup beranda desktop/mobile, daftar inisiatif, tentang, kontak mobile, error, dan drawer setelah animasi. Bukti ditinjau secara visual; berkas screenshot adalah output lokal yang dikecualikan Git. Ilustrasi serta lisensi/provenance tercatat di EVIDENCE. Pemeriksaan otomatis bukan sertifikasi WCAG, uji perangkat iOS/Android fisik, screen reader, Lighthouse/CWV field, atau penerimaan produksi. Tidak ada perubahan backend/schema/endpoint, GitHub Actions, merge, ataupun deployment publik.
+
+## Hardening aksesibilitas dan hydration, 4 Oktober 2026
+
+Review lanjutan mencatat pola desain dari delapan situs informasi kemanusiaan dan lembaga filantropi, ditambah panduan W3C WCAG22, WebAIM, GOV.UK Design System, USWDS, dan Practical Typography. Pola yang diadopsi bersifat struktural; tidak ada teks, kode, angka capaian, atau aset milik situs lain yang diimpor. Pola yang dikecualikan karena berada di luar R1 antara lain pemilih nominal, konter dampak hidup, meteran capaian dana, dan daftar rekening donasi.
+
+Perubahan pada source publik:
+
+- `app/layouts/default.vue`: elemen `<p>` di dalam `<noscript>` dihapus. Parser HTML memperlakukan isi noscript sebagai teks mentah saat SSR, sementara Vue mengharapkan elemen, sehingga setiap halaman publik mencatat `Hydration completed but contains mismatches`. Teks bantuan sekarang memakai elemen noscript berkelas container.
+- `app/assets/css/main.css`: `letter-spacing` label eyebrow diturunkan dari0,15em ke0,115em agar berada pada rentang konvensi all-caps 0,05-0,12em dan tetap aman bila pengguna menambah spasi huruf sesuai SC 1.4.12. Warna eyebrow dan text-link memakai#0A5F62 sehingga rasio terburuk pada permukaan krem/mint naik dari5,45:1 menjadi6,62:1.
+- `app/assets/css/main.css`: token `--color-control-border`#6F868C ditambahkan dan dipakai input, select, kartu konten, panel filter, kartu pilar, dan chip filter. Sebelumnya batas kontrol memakai `--color-border` pada1,31-1,68:1 sehingga tidak memenuhi SC 1.4.11; nilai baru berada pada3,49-3,84:1 di seluruh permukaan.
+- `app/assets/css/main.css`: batas `step-number` dan `empty-state` dipertegas, label `card-tag` dinaikkan ke0,7rem dengan1,5rem huruf besar, indikator fokus footer berganti menjadi dua warna. Border media dan pemisah section tetap dekoratif.
+- `app/components/ContentDetail.vue`: pelanggaran `definition-list`/`dlitem` diperbaiki dengan menempatkan `dt`/`dd` tepat satu tingkat di bawah `dl`. Blok catatan publik dimasukkan pada halaman transparansi.
+- `app/components/PublicRecord.vue`: komponen baru berisi enam catatan proses yang dapat diperiksa pembaca. Isi berupa alur publikasi, penandaan versi kebijakan, perlakuan media, dan mekanisme koreksi; tidak memuat angka dampak atau capaian.
+- `app/components/ContentCollection.vue`: chip filter program memakai batas kontrol yang terlihat.
+- `app/pages/kontak.vue`: tautan lewati ke panduan bantuan ditambahkan dan tautan WhatsApp Web eksternal ditandai membuka tab baru untuk pembaca layar.
+- `.vscode/extensions.json` dan `.vscode/settings.json`: rekomendasi extension bersama (Volar, Nuxtr, ESLint, Prettier, Tailwind, Vitest, Playwright) beserta pengaturan editor. `.gitignore` dikecualikan secara selektif untuk kedua berkas ini; berkas launch/task lain tetap lokal.
+
+Validasi lokal source final:
+
+- `npm run lint`: lulus tanpa warning ESLint.
+- `npm run typecheck`: lulus.
+- `npm test`: 18/18 unit test lulus.
+- `npx playwright test tests/e2e/public.spec.ts`: 3/3 lulus pada Chromium terhadap artifact produksi port3001, dari sebelumnya 2/3 dengan kegagalan hydration. Assertion console error kini bersih.
+- Audit axe-core WCAG2A/AA,2.1AA,2.2AA diperluas ke15 halaman publik termasuk transparansi, faq, privasi, ketentuan, dan cari dengan konfigurasi `.local/a11y.config.ts`: seluruh halaman bersih tanpa violation. Pelanggaran `dlitem` pada halaman detail inisiatif merupakan temuan baru dari perluasan ini dan sudah diperbaiki.
+- `npm run build`: lulus. Artifact dijalankan pada127.0.0.1:3001 dengan DB compose; 14 route publik menjawab200 tanpa error konsol.
+- Login MFA nyata dan enam endpoint CMS (`/auth/me`, `admin/content`, `admin/media`, `admin/settings`, `admin/team`, `admin/audit`) menjawab200, memastikan perubahan style tidak merusak CMS.
+- `python docs/tools/validate_docs.py`: 19 dokumen,47 requirement,47 skenario,0 structural error.
+- `npx prettier --check` pada berkas yang diubah dan `git diff --check`: lulus.
+
+Temuan sampingan yang tidak diperbaiki pada tugas ini: `docs/tools/validate_docs.py` meregenerasi `docs/ASSET_INVENTORY.csv` dan menghapus kolom dimensi pada32 baris. Berkas tersebut dikembalikan ke revisi Git dan bug generatornya belum diperbaiki.
+
+Keterbatasan: pemeriksaan axe dijalankan pada Chromium headless dan bukan sertifikasi WCAG. Fokus yang terlihat, ukuran target sentuh, dan perilaku pembaca layar belum diuji manual. Uji perangkat iOS/Android fisik, screen reader nyata, zoom200%, dan riset dengan peserta belum dilakukan. Perubahan tidak menyentuh backend, schema, endpoint, media, maupun alur publikasi; tidak ada GitHub Actions, klaim kesiapan produksi, atau deployment publik.

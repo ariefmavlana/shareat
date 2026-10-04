@@ -36,6 +36,11 @@ usePublicSeo(
     <section
       class="container section grid items-start gap-10 lg:grid-cols-[1.25fr_1fr]"
     >
+      <a
+        href="#bantuan"
+        class="fixed left-4 top-4 z-100 -translate-y-24 rounded-lg bg-white px-5 py-3 font-bold shadow-lg focus:translate-y-0"
+        >Lewati ke panduan bantuan</a
+      >
       <div class="surface overflow-hidden">
         <div class="border-b bg-[#f0f8f5] p-6 sm:p-8">
           <span class="icon-tile mb-5 bg-white"
@@ -64,7 +69,7 @@ usePublicSeo(
             >
             <div class="mb-6 rounded-xl bg-muted p-5">
               <p
-                class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
+                class="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground"
               >
                 Nomor WhatsApp {{ settings.demo ? 'sementara · demo' : 'tim' }}
               </p>
@@ -107,7 +112,7 @@ usePublicSeo(
           </div>
         </div>
       </div>
-      <div>
+      <div id="bantuan" tabindex="-1" class="scroll-mt-32">
         <span class="eyebrow">Sebelum memulai</span>
         <h2 class="text-2xl">
           Percakapan yang nyaman,<br />informasi yang terjaga.
@@ -153,7 +158,8 @@ usePublicSeo(
             target="_blank"
             rel="noopener noreferrer"
             class="text-link mt-2 text-xs"
-            >Buka WhatsApp Web<ArrowUpRight class="size-4" aria-hidden="true"
+            >Buka WhatsApp Web<span class="sr-only"> (tab baru)</span
+            ><ArrowUpRight class="size-4" aria-hidden="true"
           /></a>
         </div>
         <p class="mt-5 text-xs leading-6 text-muted-foreground">
