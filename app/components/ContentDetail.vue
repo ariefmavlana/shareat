@@ -156,21 +156,21 @@ const updated = new Intl.DateTimeFormat('id-ID', {
               {{ paragraph }}
             </p>
           </div>
-          <div
-            v-if="slug === 'transparansi' && kind === 'page'"
-            class="mt-10 grid gap-3 sm:grid-cols-2"
-          >
-            <NuxtLink
-              to="/privasi"
-              class="surface p-5 text-sm font-bold hover:border-primary"
-              >Kebijakan privasi<ArrowUpRight
-                class="mt-3 size-5 text-primary" /></NuxtLink
-            ><NuxtLink
-              to="/ketentuan"
-              class="surface p-5 text-sm font-bold hover:border-primary"
-              >Ketentuan penggunaan<ArrowUpRight
-                class="mt-3 size-5 text-primary"
-            /></NuxtLink>
+          <div v-if="slug === 'transparansi' && kind === 'page'" class="mt-10">
+            <PublicRecord />
+            <div class="mt-10 grid gap-3 sm:grid-cols-2">
+              <NuxtLink
+                to="/privasi"
+                class="surface p-5 text-sm font-bold hover:border-primary"
+                >Kebijakan privasi<ArrowUpRight
+                  class="mt-3 size-5 text-primary" /></NuxtLink
+              ><NuxtLink
+                to="/ketentuan"
+                class="surface p-5 text-sm font-bold hover:border-primary"
+                >Ketentuan penggunaan<ArrowUpRight
+                  class="mt-3 size-5 text-primary"
+              /></NuxtLink>
+            </div>
           </div>
           <div class="mt-10 border-t pt-6 text-xs text-muted-foreground">
             <p>Diperbarui {{ updated }}</p>
@@ -209,35 +209,38 @@ const updated = new Intl.DateTimeFormat('id-ID', {
             v-if="item.location || item.schedule || item.responsible"
             class="my-6 grid gap-5 border-y py-6 text-sm"
           >
-            <div v-if="item.location" class="flex gap-3">
+            <div
+              v-if="item.location"
+              class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1"
+            >
               <MapPin
-                class="mt-1 size-4 shrink-0 text-primary"
+                class="row-span-2 mt-1 size-4 text-primary"
                 aria-hidden="true"
               />
-              <div>
-                <dt class="text-xs text-muted-foreground">Lokasi</dt>
-                <dd class="mt-1 font-semibold">{{ item.location }}</dd>
-              </div>
+              <dt class="text-xs text-muted-foreground">Lokasi</dt>
+              <dd class="font-semibold">{{ item.location }}</dd>
             </div>
-            <div v-if="item.schedule" class="flex gap-3">
+            <div
+              v-if="item.schedule"
+              class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1"
+            >
               <CalendarDays
-                class="mt-1 size-4 shrink-0 text-primary"
+                class="row-span-2 mt-1 size-4 text-primary"
                 aria-hidden="true"
               />
-              <div>
-                <dt class="text-xs text-muted-foreground">Jadwal</dt>
-                <dd class="mt-1 font-semibold">{{ item.schedule }}</dd>
-              </div>
+              <dt class="text-xs text-muted-foreground">Jadwal</dt>
+              <dd class="font-semibold">{{ item.schedule }}</dd>
             </div>
-            <div v-if="item.responsible" class="flex gap-3">
+            <div
+              v-if="item.responsible"
+              class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1"
+            >
               <UserRound
-                class="mt-1 size-4 shrink-0 text-primary"
+                class="row-span-2 mt-1 size-4 text-primary"
                 aria-hidden="true"
               />
-              <div>
-                <dt class="text-xs text-muted-foreground">Penanggung jawab</dt>
-                <dd class="mt-1 font-semibold">{{ item.responsible }}</dd>
-              </div>
+              <dt class="text-xs text-muted-foreground">Penanggung jawab</dt>
+              <dd class="font-semibold">{{ item.responsible }}</dd>
             </div>
           </dl>
           <p class="my-5 text-sm leading-7 text-muted-foreground">

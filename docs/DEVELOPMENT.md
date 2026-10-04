@@ -75,6 +75,41 @@ Schema baru: edit `server/db/schema.ts`, `npm run db:generate`, review SQL/snaps
 
 `npm audit --json` ditinjau tanpa menyembunyikan exit nonzero. Jangan force fix tanpa compatibility review. [IMPLEMENTATION](IMPLEMENTATION.md) mencatat versi/hasil/batas aktual, [OPERATIONS](OPERATIONS.md) menjelaskan deployment.
 
+## Editor dan extension
+
+Repositori menyertakan `.vscode/extensions.json` dan `.vscode/settings.json` agar penyiapan editor seragam. `.vscode/` diabaikan Git pada `.gitignore` baris 29, jadi kedua berkas ini hanya berlaku untuk checkout lokal dan tidak dikirim ke PR; sampaikan daftar di bawah kepada kolaborator melalui kanal privat.
+
+Extension yang dipakai bersama:
+
+| Extension ID | Nama tampilan | Perannya |
+| --- | --- | --- |
+| Vue.volar | Vue - Official | Bahasa dan type-check berkas `.vue` (menggantikan Vetur) |
+| Nuxtr.nuxtr-vscode | Nuxtr | Navigasi dan pembuatan berkas Nuxt dari command palette |
+| dbaeumer.vscode-eslint | ESLint | Menampilkan temuan `npm run lint` di editor |
+| esbenp.prettier-vscode | Prettier | Formatter sesuai `.prettierrc.json` |
+| bradlc.vscode-tailwindcss | Tailwind CSS IntelliSense | Autocomplete kelas Tailwind 4 |
+| vitest.explorer | Vitest | Menjalankan `tests/unit` dari sidebar |
+| ms-playwright.playwright | Playwright | Menjalankan `tests/e2e` dari sidebar |
+
+Plugin Nuxt resmi di VS Code memakai ekstensi Volar yang sama, jadi tidak perlu ekstensi terpisah.
+
+Memasang dari VS Code: `Ctrl+Shift+X`, cari nama extension, lalu Install. Memasang dari terminal: `code --install-extension <extension-id>`. Menampilkan semua yang sudah terpasang: `code --list-extensions`.
+
+## Navigasi VS Code
+
+| Aksi | Windows / Linux | macOS |
+| --- | --- | --- |
+| Command palette Nuxtr | `Ctrl+Shift+P` lalu ketik `Nuxtr` | `Cmd+Shift+P` lalu `Nuxtr` |
+| Quick open berkas | `Ctrl+P` | `Cmd+P` |
+| Cari simbol di berkas | `Ctrl+Shift+O` | `Cmd+Shift+O` |
+| Cari simbol di workspace | `Ctrl+T` | `Cmd+T` |
+| Panel masalah (ESLint/TS) | `Ctrl+Shift+M` | `Cmd+Shift+M` |
+| Terminal terintegrasi | `Ctrl+`` ` `` | `Cmd+`` ` `` |
+| Sidebar Testing (Vitest/Playwright) | `Ctrl+Shift+T` dari panel, atau ikon labu | sama |
+| Buka definisi | `F12` | `F12` |
+
+Perintah Nuxtr yang sering dipakai dari command palette: membuat component/composable/page, menjalankan dev server, dan membuka dokumentasi Nuxt. Biarkan lint serta typecheck tetap dijalankan lewat terminal (`npm run lint`, `npm run typecheck`) karena CI tidak digunakan.
+
 ## Workflow
 
 Inspect status → fetch → branch baru dari origin/main bila aman → Conventional Commit → local checks → staged diff/secret review → push branch → PRmain. Preserve perubahan orang lain. Jangan commit/forcepush main, menambahkan GitHub Actions, merge atau deploy tanpa otorisasi. Detail ada pada [CONTRIBUTING](../CONTRIBUTING.md).
