@@ -122,3 +122,7 @@ Review sebelum merge 3 Oktober 2026 memperketat ADR-17: recovery baru dan penang
 Tanggal keputusan teknis: 3 Oktober 2026. Pilihan yang mengubah kontrak sudah diselaraskan pada SRS/SDD/API/traceability. Pemeriksaan lokal membuktikan bagian yang terukur; external operator/legal/hosting readiness tetap terbuka.
 
 Dependency audit preview: npm melaporkan 15 advisori transitif (11 high, 4 moderate). Tidak melakukan downgrade Nuxt major atau force audit fix tanpa compatibility review. [IMPLEMENTATION](IMPLEMENTATION.md) mencatat analisis artifact dan sisa risiko. NFR-003 menghalangi release bila temuan tinggi/kritis dapat dieksploitasi; review dependency serta upstream fix menjadi gate sebelum produksi.
+
+## ADR-23 — Redesign berbasis referensi, 4 Oktober 2026
+
+Pemilik menolak UI sebelumnya dan meminta penggunaan maksimal folder referensi untuk tampilan modern, profesional, responsif, dan komprehensif. Implementasi memakai kembali arah aqua/navy serta pola hero, program, nilai/keterbukaan, kontak, dan footer CharityPress sebagai inspirasi. Nuxt/Vue/shadcn-vue tetap mengikuti U-01. Aqua CTA digelapkan untuk kontras. Manrope diambil dari Google Fonts dengan SIL OFL dan di-host lokal. Ilustrasi hero orisinal dibuat melalui ImageGen dan diberi label konseptual; SVG program dibuat dari source proyek. Foto, font, logo, angka, nama, dan script legacy tidak diimpor. Ini mengubah desain presentasi, tanpa mengaktifkan pengumpulan uang/barang maupun R2.

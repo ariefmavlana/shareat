@@ -6,7 +6,10 @@ import {
   BookOpen,
   Utensils,
   GraduationCap,
-  Check,
+  HeartHandshake,
+  ShieldCheck,
+  MessageCircle,
+  Compass,
 } from '@lucide/vue'
 const { data: settings } = await useSiteSettings()
 const { data, error } = await useFetch('/api/v1/public/home', {
@@ -21,6 +24,23 @@ const programs = computed(() => data.value?.programs ?? [])
 const initiatives = computed(() => data.value?.initiatives ?? [])
 const stories = computed(() => data.value?.stories ?? [])
 const faqs = computed(() => data.value?.faqs ?? [])
+const steps = [
+  {
+    icon: Compass,
+    title: 'Temukan ruang berbagimu',
+    text: 'Kenali program dan rencana kegiatan yang dekat dengan kepedulianmu.',
+  },
+  {
+    icon: HeartHandshake,
+    title: 'Pilih peran yang sesuai',
+    text: 'Mulai dari waktu, pengetahuan, atau jejaring yang ingin kamu bagikan.',
+  },
+  {
+    icon: MessageCircle,
+    title: 'Buka percakapan',
+    text: 'Bicarakan idemu bersama tim melalui WhatsApp. Tinjau pesan, lalu kirim sendiri.',
+  },
+]
 usePublicSeo(
   'Bersama, berbagi lebih berarti.',
   'Kenali Share Eat, Share Knowledge, dan Share Book. Jelajahi rencana kegiatan dan buka percakapan kolaborasi bersama Shareat.',
@@ -32,155 +52,151 @@ usePublicSeo(
 </script>
 <template>
   <div>
-    <section
-      class="container grid items-center gap-14 pb-16 pt-14 lg:grid-cols-[1.15fr_1fr] lg:pb-24 lg:pt-20"
-    >
-      <div>
-        <span class="eyebrow">Ruang berbagi untuk Indonesia</span>
-        <h1 class="max-w-2xl">
-          Bersama,<br />berbagi lebih<br /><span class="text-primary"
-            >berarti.</span
-          >
-        </h1>
-        <p class="mt-7 max-w-md text-lg text-muted-foreground">
-          Dari sepiring makanan, ilmu yang dibagikan, hingga buku yang membuka
-          harapan. Kebaikan punya banyak cara untuk dimulai.
-        </p>
-        <div class="mt-9 flex flex-wrap gap-3">
-          <UiButton as-child class="min-h-13 rounded-full px-7 text-base"
-            ><NuxtLink to="/program"
-              >Temukan ruang berbagi<ArrowUpRight
-                class="size-5" /></NuxtLink></UiButton
-          ><UiButton
-            as-child
-            variant="ghost"
-            class="min-h-13 rounded-full px-6 text-base"
-            ><NuxtLink to="/tentang"
-              >Kenali Shareat<ArrowRight class="size-4" /></NuxtLink
-          ></UiButton>
-        </div>
-        <p class="mt-8 flex items-center gap-2 text-xs text-muted-foreground">
-          <span class="grid size-5 place-items-center rounded-full bg-[#e3eadb]"
-            ><Check class="size-3" /></span
-          >Informasi yang jelas. Langkah yang sederhana.
-        </p>
-      </div>
-      <div class="relative mx-auto w-full max-w-lg">
-        <div
-          class="mb-4 flex items-center justify-between text-xs font-medium text-muted-foreground"
-        >
-          <span>KECIL LANGKAHNYA. LUAS MAKNA BERBAGINYA.</span
-          ><Heart class="size-4 text-primary" />
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div
-            class="relative flex min-h-60 flex-col justify-between rounded-[2.5rem_2.5rem_.7rem_2.5rem] bg-[#dce8c6] p-5 sm:p-7"
-          >
-            <Utensils
-              class="size-14 text-[#42643c]"
-              :stroke-width="1.1"
-              aria-hidden="true"
-            />
-            <div>
-              <span class="text-xs text-[#42643c]">01 / PANGAN</span>
-              <p
-                class="mt-2 text-2xl sm:text-3xl font-semibold leading-tight tracking-tight"
-              >
-                Hangatnya<br />berbagi.
-              </p>
-            </div>
-          </div>
-          <div
-            class="relative mt-12 flex min-h-60 flex-col justify-between rounded-[2.5rem_.7rem_2.5rem_2.5rem] bg-[#efcfb2] p-5 sm:p-7"
-          >
-            <GraduationCap
-              class="size-14 text-[#754218]"
-              :stroke-width="1.1"
-              aria-hidden="true"
-            />
-            <div>
-              <span class="text-xs text-[#754218]">02 / PENGETAHUAN</span>
-              <p
-                class="mt-2 text-2xl sm:text-3xl font-semibold leading-tight tracking-tight"
-              >
-                Belajar.<br />Bertumbuh.
-              </p>
-            </div>
-          </div>
-          <div
-            class="-mt-8 flex min-h-52 flex-col justify-between rounded-[2.5rem_.7rem_2.5rem_2.5rem] bg-[#e3def0] p-5 sm:p-7"
-          >
-            <BookOpen
-              class="size-14 text-[#665184]"
-              :stroke-width="1.1"
-              aria-hidden="true"
-            />
-            <div>
-              <span class="text-xs text-[#665184]">03 / LITERASI</span>
-              <p class="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight">
-                Buka dunia.
-              </p>
-            </div>
-          </div>
-          <div class="flex items-center justify-center p-5">
-            <div class="text-center">
-              <div
-                class="mx-auto mb-4 grid size-18 place-items-center rounded-full border border-[#b6c7b0]"
-              >
-                <Heart
-                  class="size-7 text-primary"
-                  :stroke-width="1.2"
-                  aria-hidden="true"
-                />
-              </div>
-              <p class="text-sm text-muted-foreground">
-                Berawal dari peduli.<br />Berlanjut bersama.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-    <section class="border-y bg-[#eef1e9]">
-      <div
-        class="container flex flex-wrap items-center justify-between gap-6 py-7 text-sm"
-      >
-        <p class="font-medium">Setiap bentuk kepedulian punya tempat.</p>
-        <div class="flex flex-wrap gap-x-7 gap-y-3 text-muted-foreground">
-          <span>Berbagi waktu</span><span>Berbagi pengetahuan</span
-          ><span>Berbagi jejaring</span>
-        </div>
-      </div>
-    </section>
-    <section class="container section">
-      <div class="mb-10 flex flex-wrap items-end justify-between gap-6">
+    <section class="hero">
+      <div class="container hero-grid">
         <div>
-          <span class="eyebrow">Tiga cara untuk memulai</span>
-          <h2>Temukan yang dekat<br />dengan kepedulianmu.</h2>
+          <span class="eyebrow">Ruang berbagi untuk Indonesia</span>
+          <h1 class="hero-title">
+            Kebaikan kecil.<br />Kesempatan<br /><em>lebih besar.</em>
+          </h1>
+          <p class="mt-7 max-w-md text-base leading-8 text-muted-foreground">
+            Dari sepiring makanan, ilmu yang dibagikan, hingga buku yang membuka
+            dunia. Bersama Shareat, temukan caramu untuk berbagi.
+          </p>
+          <div class="mt-8 flex flex-wrap gap-3">
+            <NuxtLink to="/program" class="action-link"
+              >Jelajahi program<ArrowUpRight
+                class="size-4"
+                aria-hidden="true" /></NuxtLink
+            ><NuxtLink to="/tentang" class="action-link secondary"
+              >Kenali Shareat<ArrowRight class="size-4" aria-hidden="true"
+            /></NuxtLink>
+          </div>
+          <p
+            class="mt-8 flex items-center gap-2.5 text-xs text-muted-foreground"
+          >
+            <span
+              class="grid size-7 place-items-center rounded-full bg-[#e3eee5]"
+              ><Heart class="size-3.5 text-primary" aria-hidden="true" /></span
+            >Berbagi waktu. Berbagi ilmu. Berbagi kepedulian.
+          </p>
         </div>
-        <p class="max-w-sm text-muted-foreground">
-          Mengenal kebutuhan menjadi langkah pertama. Pilih program yang ingin
-          kamu pahami lebih jauh.
+        <figure class="hero-art">
+          <div class="hero-art-frame">
+            <img
+              src="/images/berbagi-bersama.webp"
+              srcset="
+                /images/berbagi-bersama-720.webp  720w,
+                /images/berbagi-bersama.webp     1440w
+              "
+              sizes="(min-width: 1024px) 560px, 90vw"
+              alt="Ilustrasi orang dewasa berbagi makanan, belajar, dan menata buku di ruang komunitas."
+              width="1440"
+              height="960"
+              fetchpriority="high"
+            />
+          </div>
+          <div class="hero-floating">
+            <span class="icon-tile"
+              ><HeartHandshake
+                class="size-6"
+                :stroke-width="1.5"
+                aria-hidden="true"
+            /></span>
+            <div>
+              <p class="text-sm font-extrabold">
+                Berbeda cara, satu kepedulian.
+              </p>
+              <p class="mt-0.5 text-[11px] text-muted-foreground">
+                Pangan · Pengetahuan · Literasi
+              </p>
+            </div>
+          </div>
+          <figcaption class="hero-caption">
+            Ilustrasi konseptual · bukan dokumentasi kegiatan
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+    <div class="border-b bg-white">
+      <div class="container grid gap-3 py-6 md:grid-cols-3">
+        <NuxtLink
+          v-for="item in programs.slice(0, 3)"
+          :key="item.id"
+          :to="'/program/' + item.slug"
+          class="pillar-link"
+        >
+          <span
+            class="icon-tile"
+            :class="
+              item.slug === 'share-book'
+                ? 'bg-[#f2ecdb] text-[#816425]'
+                : item.slug === 'share-knowledge'
+                  ? 'bg-[#e8eef9] text-[#42608b]'
+                  : ''
+            "
+            ><component
+              :is="
+                item.slug === 'share-book'
+                  ? BookOpen
+                  : item.slug === 'share-knowledge'
+                    ? GraduationCap
+                    : Utensils
+              "
+              class="size-6"
+              :stroke-width="1.5"
+              aria-hidden="true"
+          /></span>
+          <div class="min-w-0">
+            <p class="font-extrabold">{{ item.title }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{
+                item.slug === 'share-book'
+                  ? 'Membuka dunia lewat bacaan'
+                  : item.slug === 'share-knowledge'
+                    ? 'Tumbuh lewat pengetahuan'
+                    : item.slug === 'share-eat'
+                      ? 'Kepedulian melalui pangan'
+                      : 'Kenali ruang kolaborasinya'
+              }}
+            </p>
+          </div>
+          <ArrowUpRight
+            class="ml-auto size-4 shrink-0 text-primary"
+            aria-hidden="true"
+          />
+        </NuxtLink>
+        <p v-if="!programs.length" class="py-5 text-muted-foreground">
+          Informasi program sedang disiapkan.
         </p>
+      </div>
+    </div>
+    <section class="container section">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Program Shareat</span>
+          <h2>Banyak cara berbagi.<br />Temukan yang berarti.</h2>
+        </div>
+        <NuxtLink to="/program" class="text-link"
+          >Semua program<ArrowUpRight class="size-4" aria-hidden="true"
+        /></NuxtLink>
       </div>
       <div class="grid gap-6 md:grid-cols-3">
         <ContentCard v-for="item in programs" :key="item.id" :item="item" />
       </div>
-      <p v-if="!programs.length" class="rounded-xl border p-6">
-        Informasi program sedang disiapkan.
+      <p v-if="!programs.length" class="empty-state">
+        Informasi program sedang disiapkan. Kunjungi kembali untuk pembaruan.
       </p>
     </section>
-    <section class="bg-white">
+    <section class="bg-[#f3f7f7]">
       <div class="container section">
-        <div class="mb-10 flex flex-wrap items-end justify-between gap-6">
+        <div class="section-heading">
           <div>
             <span class="eyebrow">Inisiatif & rencana kegiatan</span>
-            <h2>Kebaikan yang<br />bisa kita bicarakan.</h2>
+            <h2>Dari kepedulian,<br />menuju langkah bersama.</h2>
           </div>
-          <NuxtLink
-            to="/inisiatif"
-            class="inline-flex items-center gap-2 border-b pb-2 text-sm font-semibold"
-            >Lihat semua inisiatif<ArrowUpRight class="size-4"
+          <NuxtLink to="/inisiatif" class="text-link"
+            >Jelajahi inisiatif<ArrowUpRight class="size-4" aria-hidden="true"
           /></NuxtLink>
         </div>
         <div class="grid gap-6 md:grid-cols-3">
@@ -190,124 +206,132 @@ usePublicSeo(
             :item="item"
           />
         </div>
-        <p v-if="!initiatives.length" class="rounded-xl border p-6">
-          Belum ada inisiatif yang dipublikasikan. Kenali program atau hubungi
-          tim untuk informasi.
-        </p>
-      </div>
-    </section>
-    <section class="container section grid gap-12 lg:grid-cols-2">
-      <div>
-        <span class="eyebrow">Langkah sederhana</span>
-        <h2>
-          Mulai dari ingin tahu.<br />Lanjutkan dengan<br /><span
-            class="text-primary"
-            >percakapan.</span
-          >
-        </h2>
-        <p class="mt-6 max-w-md text-muted-foreground">
-          Tak perlu memulai dengan hal besar. Pahami programnya, temukan
-          kecocokannya, dan bicarakan bersama tim.
-        </p>
-      </div>
-      <ol class="grid gap-7">
-        <li
-          v-for="(step, index) in [
-            {
-              title: 'Kenali ruang berbaginya',
-              text: 'Jelajahi program dan baca konteks rencana kegiatannya.',
-            },
-            {
-              title: 'Temukan peran yang sesuai',
-              text: 'Pikirkan waktu, pengetahuan, atau jejaring yang ingin kamu bagikan.',
-            },
-            {
-              title: 'Buka percakapan bersama tim',
-              text: 'Hubungi melalui WhatsApp. Tinjau pesan, lalu kirim sendiri.',
-            },
-          ]"
-          :key="step.title"
-          class="flex gap-5 border-b pb-7"
-        >
-          <span
-            class="grid size-11 shrink-0 place-items-center rounded-full border text-sm"
-            >0{{ index + 1 }}</span
-          >
-          <div>
-            <h3 class="text-xl">{{ step.title }}</h3>
-            <p class="mt-2 text-sm text-muted-foreground">{{ step.text }}</p>
-          </div>
-        </li>
-      </ol>
-    </section>
-    <section class="container">
-      <div
-        class="grid gap-10 rounded-3xl bg-[#173f32] px-7 py-12 text-white md:grid-cols-[1.4fr_1fr] md:px-12"
-      >
-        <div>
-          <span class="eyebrow !text-[#cde0b3]"
-            >Keterbukaan sebagai fondasi</span
-          >
-          <h2 class="text-3xl md:text-4xl">
-            Kepercayaan tumbuh<br />dari informasi yang jelas.
-          </h2>
-        </div>
-        <div>
-          <p class="text-sm leading-relaxed text-[#d3dfd7]">
-            Kenali proses review, status kesiapan platform, dan cara informasi
-            diperbarui. Rencana dan laporan kegiatan selalu dibedakan.
+        <div v-if="!initiatives.length" class="empty-state">
+          <h3>Langkah berikutnya sedang disiapkan.</h3>
+          <p class="mt-3 text-sm text-muted-foreground">
+            Kenali program atau hubungi tim untuk informasi kegiatan.
           </p>
-          <NuxtLink
-            to="/transparansi"
-            class="mt-6 inline-flex min-h-11 items-center gap-3 font-medium"
-            >Lihat transparansi<ArrowUpRight class="size-4"
+          <NuxtLink to="/kontak" class="text-link mt-3"
+            >Hubungi tim<ArrowRight class="size-4"
           /></NuxtLink>
         </div>
       </div>
     </section>
     <section class="container section">
-      <div class="mb-10 flex flex-wrap justify-between gap-5">
-        <div>
-          <span class="eyebrow">Cerita berbagi</span>
-          <h2>Ruang untuk cerita<br />dan pembelajaran.</h2>
-        </div>
-        <NuxtLink
-          to="/cerita"
-          class="self-end border-b pb-2 text-sm font-semibold"
-          >Jelajahi cerita ↗</NuxtLink
+      <div class="mb-12 max-w-2xl">
+        <span class="eyebrow">Sesederhana tiga langkah</span>
+        <h2>Kamu punya kepedulian.<br />Mari temukan jalannya.</h2>
+        <p class="mt-5 text-muted-foreground">
+          Tak harus memulai dengan hal besar. Ruang untuk berkontribusi bisa
+          berawal dari hal yang dekat denganmu.
+        </p>
+      </div>
+      <ol class="grid gap-7 md:grid-cols-3">
+        <li
+          v-for="(step, index) in steps"
+          :key="step.title"
+          class="relative border-t pt-7"
         >
+          <div class="mb-6 flex items-center justify-between">
+            <span class="step-number">0{{ index + 1 }}</span
+            ><component
+              :is="step.icon"
+              class="size-7 text-primary"
+              :stroke-width="1.3"
+              aria-hidden="true"
+            />
+          </div>
+          <h3>{{ step.title }}</h3>
+          <p class="mt-3 text-sm leading-7 text-muted-foreground">
+            {{ step.text }}
+          </p>
+        </li>
+      </ol>
+    </section>
+    <section class="bg-secondary text-white">
+      <div
+        class="container grid items-center gap-12 py-14 md:grid-cols-[1.15fr_1fr] md:py-20"
+      >
+        <div>
+          <span class="eyebrow !text-aqua">Keterbukaan sebagai fondasi</span>
+          <h2>Kepercayaan tumbuh<br />dari informasi yang jelas.</h2>
+          <p class="mt-5 max-w-lg text-sm leading-7 text-[#c4d3de]">
+            Kenali proses publikasi dan status kesiapan Shareat. Setiap rencana
+            dan cerita punya konteks yang bisa kamu pahami.
+          </p>
+          <NuxtLink
+            to="/transparansi"
+            class="mt-6 inline-flex min-h-12 items-center gap-3 text-sm font-bold text-aqua"
+            >Kenali transparansi kami<ArrowUpRight
+              class="size-4"
+              aria-hidden="true"
+          /></NuxtLink>
+        </div>
+        <div class="grid gap-4">
+          <div
+            v-for="value in [
+              {
+                title: 'Konteks yang terbuka',
+                text: 'Status rencana, jadwal, dan penanggung jawab ditampilkan sesuai informasi yang tersedia.',
+              },
+              {
+                title: 'Publikasi melalui review',
+                text: 'Klaim, privasi, dan izin media menjadi bagian dari proses peninjauan.',
+              },
+              {
+                title: 'Ruang untuk bertanya',
+                text: 'Kanal kontak tersedia untuk pertanyaan dan koreksi informasi.',
+              },
+            ]"
+            :key="value.title"
+            class="flex gap-4 rounded-xl border border-white/15 bg-white/5 p-5"
+          >
+            <ShieldCheck
+              class="mt-1 size-5 shrink-0 text-aqua"
+              aria-hidden="true"
+            />
+            <div>
+              <h3 class="text-base tracking-normal">{{ value.title }}</h3>
+              <p class="mt-2 text-xs leading-6 text-[#c4d3de]">
+                {{ value.text }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="container section">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Catatan & cerita</span>
+          <h2>Karena setiap proses<br />punya cerita.</h2>
+        </div>
+        <NuxtLink to="/cerita" class="text-link"
+          >Semua cerita<ArrowUpRight class="size-4" aria-hidden="true"
+        /></NuxtLink>
       </div>
       <div class="grid gap-6 md:grid-cols-3">
         <ContentCard v-for="item in stories" :key="item.id" :item="item" />
       </div>
+      <p v-if="!stories.length" class="empty-state">
+        Cerita dan pembelajaran akan hadir setelah dipublikasikan oleh tim.
+      </p>
     </section>
-    <section
-      class="container section grid gap-12 border-t md:grid-cols-[1fr_1.3fr]"
-    >
-      <div>
-        <span class="eyebrow">Pertanyaan umum</span>
-        <h2>Lebih jelas,<br />lebih mudah.</h2>
-        <NuxtLink
-          to="/faq"
-          class="mt-6 inline-flex min-h-11 items-center gap-3 text-sm font-medium"
-          >Semua pertanyaan<ArrowRight class="size-4"
-        /></NuxtLink>
-      </div>
-      <FaqList :items="faqs" />
-    </section>
-    <section class="container pb-8">
-      <div class="rounded-3xl bg-[#e4eccf] px-7 py-12 text-center md:p-16">
-        <span class="eyebrow">Mari mulai bersama</span>
-        <h2>Ada kebaikan yang<br />ingin kamu bagikan?</h2>
-        <p class="mx-auto mb-7 mt-5 max-w-md text-muted-foreground">
-          Kami ingin mendengar idemu. Kenali kanal kontak, lalu buka percakapan
-          bersama tim Shareat.
-        </p>
-        <UiButton as-child class="min-h-12 rounded-full px-7 text-base"
-          ><NuxtLink to="/kontak"
-            >Mari berbincang<ArrowUpRight class="size-5" /></NuxtLink
-        ></UiButton>
+    <section class="border-t bg-sand">
+      <div class="container section grid gap-10 md:grid-cols-[.8fr_1.2fr]">
+        <div>
+          <span class="eyebrow">Kenali lebih dekat</span>
+          <h2>Mungkin kamu<br />ingin tahu.</h2>
+          <p class="mt-5 max-w-sm text-sm text-muted-foreground">
+            Beberapa jawaban sebelum memulai langkah pertamamu bersama Shareat.
+          </p>
+          <NuxtLink to="/faq" class="text-link mt-5"
+            >Semua pertanyaan<ArrowRight class="size-4" aria-hidden="true"
+          /></NuxtLink>
+        </div>
+        <FaqList :items="faqs" />
       </div>
     </section>
+    <JoinBanner />
   </div>
 </template>

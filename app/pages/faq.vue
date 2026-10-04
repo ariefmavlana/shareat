@@ -19,15 +19,30 @@ usePublicSeo(
 )
 </script>
 <template>
-  <section class="container section">
-    <span class="eyebrow">Informasi & bantuan</span>
-    <h1 class="text-4xl md:text-6xl">Pertanyaan umum.</h1>
-    <p class="mb-12 mt-6 max-w-xl text-lg text-muted-foreground">
-      Jawaban singkat untuk membantu kamu mengenal Shareat dan mulai berbagi
-      dengan langkah yang jelas.
-    </p>
-    <div class="max-w-3xl"><FaqList :items="data?.items ?? []" /></div>
-    <p class="mb-5 mt-12">Belum menemukan jawaban yang dibutuhkan?</p>
-    <ContactButton />
-  </section>
+  <div>
+    <PageIntro
+      title="Lebih jelas, lebih mudah."
+      description="Jawaban untuk membantu kamu mengenal Shareat dan mulai berbagi dengan langkah yang jelas."
+      eyebrow="Pertanyaan umum"
+      current="FAQ"
+    />
+    <section
+      class="container section grid items-start gap-10 lg:grid-cols-[.75fr_1.5fr]"
+    >
+      <aside class="surface p-6 lg:sticky lg:top-28">
+        <span class="eyebrow">Kami siap mendengar</span>
+        <h2 class="text-2xl">Masih ada pertanyaan?</h2>
+        <p class="my-5 text-sm leading-7 text-muted-foreground">
+          Ceritakan hal yang ingin kamu ketahui. Tim dapat membantu menjelaskan
+          program dan peluang kolaborasi.
+        </p>
+        <NuxtLink to="/kontak" class="action-link">Hubungi tim</NuxtLink
+        ><NuxtLink to="/transparansi" class="text-link mt-3"
+          >Kenali transparansi kami</NuxtLink
+        >
+      </aside>
+      <FaqList :items="data?.items ?? []" />
+    </section>
+    <JoinBanner />
+  </div>
 </template>

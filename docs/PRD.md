@@ -98,7 +98,7 @@ Navigasi utama R1: **Program**, **Inisiatif**, **Cerita**, **Tentang**, **Transp
 
 ### Beranda
 
-Urutan: identitas dan misi singkat → tiga program → inisiatif pilihan → cara berpartisipasi → pembaruan kegiatan → identitas/tata kelola → FAQ ringkas → kontak. Hero memakai satu foto kontekstual yang disetujui dan teks HTML. Hindari carousel otomatis, splash preloader, counter animasi dari nol, serta foto penderitaan tanpa konteks.
+Urutan: identitas dan misi singkat → tiga program → inisiatif pilihan → cara berpartisipasi → pembaruan kegiatan → identitas/tata kelola → FAQ ringkas → kontak. Hero memakai satu visual kontekstual dan teks HTML: ilustrasi orisinal berlabel selama foto kegiatan berizin belum tersedia, atau foto yang telah disetujui. Hindari carousel otomatis, splash preloader, counter animasi dari nol, serta foto penderitaan tanpa konteks.
 
 Tidak ada angka dampak ketika bukti belum tersedia. Empty state menjelaskan bahwa kegiatan masih disiapkan. Nama mitra, nomor izin, badge, testimoni, logo, dan statistik hanya muncul jika benar-benar tersedia beserta sumber. Logo Charity dan foto drone tidak diteruskan ke situs baru.
 
@@ -120,7 +120,7 @@ Pilih kampanye → nominal dan identitas minimum → ringkasan biaya/ketentuan �
 
 ## 8. Arah visual dan bahasa
 
-Identitas visual usulan: navy sebagai teks/struktur, hijau gelap sebagai CTA, latar terang yang hangat, kartu bersih, garis pembatas ringan, dan tipografi sans yang mudah dibaca. Token dan ukuran konkret ada di SDD. Warna program membantu orientasi tetapi label teks tetap utama.
+Revisi visual 4 Oktober 2026 mengikuti permintaan pemilik untuk memaksimalkan referensi CharityPress: navy sebagai teks/struktur, aqua gelap sebagai CTA, aqua terang sebagai aksen, latar krem hangat, kartu editorial, garis pembatas ringan, dan Manrope yang disajikan lokal. Hero visual besar, jalur program, blok keterbukaan navy, dan footer lengkap menerjemahkan struktur referensi ke R1. Token dan ukuran konkret ada di SDD. Warna program membantu orientasi tetapi label teks tetap utama.
 
 Gunakan foto aktivitas nyata yang menghargai penerima manfaat, keseimbangan ruang kosong, hirarki judul jelas, format rupiah dan tanggal Indonesia, serta bahasa tanpa jargon. Kepercayaan dibangun lewat konsistensi informasi, identitas penanggung jawab, kebijakan, bukti, dan status yang jujur. Teks seperti “100% aman”, “pasti tersalurkan”, “diawasi regulator”, atau “resmi” tidak boleh ditampilkan tanpa dasar yang tepat.
 

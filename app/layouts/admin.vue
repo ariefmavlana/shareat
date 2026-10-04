@@ -13,7 +13,7 @@ async function logout() {
 }
 </script>
 <template>
-  <div class="min-h-screen bg-[#f1f4ee]">
+  <div class="min-h-screen bg-[#f2f6f6]">
     <header class="border-b bg-white">
       <div
         class="container flex flex-wrap items-center justify-between gap-4 py-5"

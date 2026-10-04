@@ -329,26 +329,26 @@ Reconciliation mengimpor statement privat dan immutable checksum, mencocokkan gr
 
 ## 7. Desain interface dan design system
 
-| Token | Baseline usulan |
+| Token | Implementasi redesign 4 Oktober 2026 |
 | --- | --- |
-| Brand navy | `#132A3A` |
-| Primary green | `#166534` dengan teks putih |
-| Background | `#F8FAF9` |
+| Brand navy | `#102D46` |
+| Primary aqua gelap | `#086D70` dengan teks putih; aqua terang `#A7EADC` di navy |
+| Background | `#FFFFFF`; section krem `#FAF7F0`, muted `#F2F6F6` |
 | Surface | `#FFFFFF` |
-| Body text | `#172B3A` |
-| Secondary text | `#475569` |
-| Error | `#B91C1C` + label/icon, tidak hanya warna |
-| Border | `#CBD5E1`; bukan satu-satunya indikasi focus |
-| Focus | `#1D4ED8`, outline 2 px dengan offset 2 px |
-| Typography | Sans berlisensi seperti Inter setelah audit, self hosted WOFF2; system fallback |
-| Base body | 16–18 px, line-height 1,6; form 16 px minimum |
-| Width | Reading max 72ch; page container 1200 px |
+| Body text | `#102D46` |
+| Secondary text | `#526574` |
+| Error | `#B42332` + label/icon, tidak hanya warna |
+| Border | `#D9E3E6`; bukan satu-satunya indikasi focus |
+| Focus | `#086D70`, outline 3 px dengan offset 4 px; aqua terang pada footer navy |
+| Typography | Manrope variable TTF 200–800, SIL OFL, self hosted dan font-display swap; Segoe UI/sans fallback |
+| Base body | 16 px, line-height 1,75; form 16 px minimum; judul fluid via clamp |
+| Width | Reading max 70ch; page container 1280 px termasuk gutter responsif |
 | Spacing/radius | 4/8/12/16/24/32/48/64 px; card 12 px, button 8 px |
 | Control | Tinggi ≥44 px, label terlihat, error dekat field |
 
-Token adalah usulan baru dari arah warna referensi; contrast semua pasangan/states tetap diuji. Program memakai icon+nama: Eat, Knowledge, Book; warna saja bukan pembeda. Hindari emoji sebagai satu-satunya label aksi. Komponen shadcn diadaptasi konsisten untuk Button, Input, Select, Card, Badge, Tabs, Accordion, Dialog, Alert, Table dan Pagination. Data table admin mempunyai caption/label, status textual, pagination dan loading/error.
+Token menerjemahkan aqua/navy referensi dengan aqua lebih gelap untuk keterbacaan CTA; contrast semua pasangan/states tetap diuji. Program memakai icon+nama: Eat, Knowledge, Book; warna saja bukan pembeda. Hindari emoji sebagai satu-satunya label aksi. Komponen shadcn diadaptasi konsisten untuk Button, Input, Select, Card, Badge, Tabs, Accordion, Dialog, Alert, Table dan Pagination. Data table admin mempunyai caption/label, status textual, pagination dan loading/error.
 
-Breakpoint berbasis isi: 320–639 satu kolom; 640–1023 dua bila cukup; ≥1024 tiga kartu dan detail dengan sidebar. Breadcrumb wrap, nav mobile berlabel, drawer focus trap dan escape. CTA sticky hanya jika tidak menutup footer/input/focus; reduced motion didukung. Foto hero fixed aspect ratio/width/height, teks tidak ditempel dalam gambar. Tidak ada auto carousel di baseline.
+Breakpoint berbasis isi: 320–639 satu kolom; 640–1023 dua bila cukup; ≥1024 tiga kartu dan detail dengan sidebar. Breadcrumb wrap, nav mobile berlabel, drawer focus trap dan escape. CTA sticky hanya jika tidak menutup footer/input/focus; reduced motion didukung. Visual hero fixed aspect ratio/width/height, teks tidak ditempel dalam gambar. Tidak ada auto carousel di baseline.
 
 | Template | Isi dan state |
 | --- | --- |
@@ -493,3 +493,7 @@ Preview sengaja memakai no-store pada seluruh halaman/API/media. Tidak ada publi
 CSP untuk HTML memakai hashes script SSR, self sources, frame/object denied; stylesheet memakai unsafe-inline karena runtime style komponen. Demo dibatasi loopback pada pengujian lokal. Bila preview dibuka di staging remote, operator wajib menambahkan network/auth restriction dan tidak hanya robots/noindex. Head SSR menghasilkan title/description/canonical/OG/JSON-LD; sitemap satu file pada volume preview. Batas sitemap50.000/50MB harus dijadikan split/index sebelum volume mencapainya.
 
 [IMPLEMENTATION](IMPLEMENTATION.md) merupakan ledger penerimaan aktual; [OPERATIONS](OPERATIONS.md) menentukan langkah deployment/rollback dan syarat minimum host. Rancangan extension R2 tetap terpisah dari schema/route aplikasi saat ini.
+
+## Revisi pengalaman publik, 4 Oktober 2026
+
+PageIntro menyatukan breadcrumb dan judul; JoinBanner menyatukan ajakan kontak. Header sticky menyediakan pencarian, posisi aktif, dan drawer Reka dengan focus trap/Escape. Daftar inisiatif menambahkan chip program; filter mengikuti URL saat back/forward dan tetap memakai endpoint DTO publik yang sama. Kartu memprioritaskan turunan media published 800.webp, lalu fallback SVG orisinal. Detail menyajikan reading column dan panel kontak sticky pada desktop. Kontak menyediakan pilihan topik, nomor/jam dinamis, copy feedback, dan fallback WhatsApp Web. Tidak ada pengiriman pesan otomatis. FAQ dan daftar memiliki state kosong yang faktual. Font, hero WebP responsif, favicon, dan ilustrasi program disajikan lokal; tidak ada vendor script atau font CDN referensi.
