@@ -27,6 +27,8 @@ export const api = <T>(fn: (event: H3Event) => Promise<T>) =>
         })
       if (error && typeof error === 'object' && 'statusCode' in error)
         throw error
+      const wrapped = statusFromCause(error)
+      if (wrapped) throw wrapped
       console.error(
         JSON.stringify({
           level: 'error',
@@ -40,6 +42,28 @@ export const api = <T>(fn: (event: H3Event) => Promise<T>) =>
       })
     }
   })
+function statusFromCause(error: unknown) {
+  let cause: unknown =
+    error && typeof error === 'object' && 'cause' in error
+      ? error.cause
+      : undefined
+  for (
+    let depth = 0;
+    depth < 4 && cause && typeof cause === 'object';
+    depth++
+  ) {
+    if ('statusCode' in cause && typeof cause.statusCode === 'number') {
+      const statusCode = cause.statusCode
+      const statusMessage =
+        'statusMessage' in cause && typeof cause.statusMessage === 'string'
+          ? cause.statusMessage
+          : undefined
+      return createError({ statusCode, statusMessage })
+    }
+    cause = 'cause' in cause ? cause.cause : undefined
+  }
+  return undefined
+}
 export async function body<T>(event: H3Event, schema: ZodType<T>): Promise<T> {
   const length = Number(getHeader(event, 'content-length') ?? 0)
   if (length > 128 * 1024) throw createError({ statusCode: 413 })
@@ -69,3 +93,13 @@ export function requireOrigin(event: H3Event) {
       statusMessage: 'Origin tidak diizinkan',
     })
 }
+export function requireMethod(event: H3Event, ...allowed: string[]) {
+  const method = event.method.toUpperCase()
+  if (!allowed.includes(method))
+    throw createError({
+      statusCode: 405,
+      statusMessage: 'Metode tidak didukung',
+      headers: { allow: [...allowed, 'HEAD'].join(', ') },
+    })
+}
+export const READ_ONLY_METHODS = ['GET', 'HEAD']

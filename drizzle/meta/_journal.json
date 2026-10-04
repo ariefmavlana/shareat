@@ -8,6 +8,13 @@
       "when": 1791028169570,
       "tag": "0000_first_grandmaster",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791110173911,
+      "tag": "0001_small_richard_fisk",
+      "breakpoints": true
     }
   ]
 }

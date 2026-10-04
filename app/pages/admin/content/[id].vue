@@ -1,17 +1,25 @@
 <script setup lang="ts">
 import type {
-  ContentBody,
   Checklist,
+  ContentBody,
   ContentRecord,
+  Revision,
 } from '~~/shared/contracts/content'
 definePageMeta({ layout: 'admin', middleware: 'staff' })
 const route = useRoute()
 const id = String(route.params.id)
+type DetailedRevision = Revision & {
+  authorEmail?: string | null
+  reviewerEmail?: string | null
+}
+type DetailedRecord = Omit<ContentRecord, 'revisions'> & {
+  revisions: DetailedRevision[]
+}
 const {
   data: record,
   error: fetchError,
   refresh,
-} = await useFetch<ContentRecord>('/api/v1/admin/content/' + id, {
+} = await useFetch<DetailedRecord>('/api/v1/admin/content/' + id, {
   key: 'admin-record-' + id,
 })
 if (fetchError.value)
@@ -51,12 +59,30 @@ const labels = {
   contact: 'Kanal kontak dan tujuan percakapan sesuai R1',
 }
 const latest = computed(() => record.value?.revisions.at(-1))
-const canEdit = computed(() =>
-  session.value?.user.roles.some((x) =>
-    ['editor', 'partner_editor'].includes(x),
-  ),
+const roles = computed(() => session.value?.user.roles ?? [])
+const isAuditor = computed(() => roles.value.includes('auditor'))
+const canEdit = computed(
+  () =>
+    !isAuditor.value &&
+    roles.value.some((x) => ['editor', 'partner_editor'].includes(x)),
 )
-const canReview = computed(() => session.value?.user.roles.includes('reviewer'))
+const canReview = computed(
+  () => !isAuditor.value && roles.value.includes('reviewer'),
+)
+const canPublish = computed(
+  () => canReview.value && latest.value?.reviewerId === session.value?.user.id,
+)
+const canArchive = computed(
+  () =>
+    canReview.value &&
+    Boolean(record.value?.publishedRevisionId) &&
+    !record.value?.archived,
+)
+const reviewContext = computed(() =>
+  [...(record.value?.revisions ?? [])]
+    .reverse()
+    .find((r) => r.reviewNote || r.reviewedAt || r.checklist),
+)
 async function save(body: ContentBody) {
   await act(
     () =>
@@ -169,6 +195,36 @@ async function act(fn: () => Promise<unknown>, message: string) {
             Penulis dan reviewer harus berbeda identitas. Lima pemeriksaan wajib
             sebelum publikasi.
           </p>
+          <div
+            v-if="isAuditor"
+            class="mb-5 rounded-xl border bg-muted p-4 text-sm"
+            role="note"
+          >
+            Peran auditor bersifat baca saja. Perubahan konten hanya dapat
+            dilakukan oleh editor dan reviewer.
+          </div>
+          <div
+            v-if="reviewContext"
+            class="mb-6 rounded-xl border bg-muted p-4 text-sm"
+          >
+            <h3 class="text-base">Catatan review terakhir</h3>
+            <p class="mt-2 text-xs text-muted-foreground">
+              Status revisi {{ reviewContext.status }}
+              <template v-if="reviewContext.reviewedAt">
+                ·
+                {{ new Date(reviewContext.reviewedAt).toLocaleString('id-ID') }}
+              </template>
+              <template v-if="reviewContext.reviewerEmail">
+                · peninjau {{ reviewContext.reviewerEmail }}
+              </template>
+            </p>
+            <p v-if="reviewContext.reviewNote" class="mt-3 whitespace-pre-wrap">
+              {{ reviewContext.reviewNote }}
+            </p>
+            <p v-else class="mt-3 text-xs text-muted-foreground">
+              Belum ada catatan tertulis pada revisi ini.
+            </p>
+          </div>
           <div v-if="canReview" class="mb-6 grid gap-4">
             <label
               v-for="(label, key) in labels"
@@ -181,7 +237,7 @@ async function act(fn: () => Promise<unknown>, message: string) {
               />{{ label }}</label
             >
           </div>
-          <label class="field mb-5 text-sm"
+          <label v-if="canEdit || canReview" class="field mb-5 text-sm"
             >Alasan revisi / arsip<UiTextarea
               v-model="reason"
               maxlength="500"
@@ -212,13 +268,13 @@ async function act(fn: () => Promise<unknown>, message: string) {
                 @click="transition('request_changes')"
                 >Minta revisi</UiButton
               ><UiButton
-                v-if="latest.status === 'reviewed'"
+                v-if="latest.status === 'reviewed' && canPublish"
                 :disabled="loading"
                 class="min-h-11"
                 @click="transition('publish')"
                 >Publikasikan snapshot</UiButton
               ><UiButton
-                v-if="record.publishedRevisionId"
+                v-if="canArchive"
                 :disabled="loading"
                 variant="outline"
                 class="min-h-11"

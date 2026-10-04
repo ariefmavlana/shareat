@@ -17,7 +17,14 @@ const fail = (statusCode: number, statusMessage: string): never => {
 }
 const has = (a: Actor, ...roles: string[]) =>
   roles.some((role) => a.roles.includes(role))
+export const isAuditor = (a: Actor) => a.roles.includes('auditor')
+const isFullTeamEditor = (a: Actor) => has(a, 'editor')
+export function assertNotAuditor(actor: Actor) {
+  if (isAuditor(actor) || actor.roles.includes('operator'))
+    fail(403, 'Auditor dan operator bersifat baca saja')
+}
 export function assertEdit(actor: Actor, record?: ContentRecord) {
+  assertNotAuditor(actor)
   if (!actor.verified || !has(actor, 'editor', 'partner_editor'))
     fail(403, 'Akses ditolak')
   if (
@@ -64,12 +71,8 @@ export class ContentService {
   constructor(private readonly repo: ContentRepository) {}
   async create(actor: Actor, kind: ContentKind, input: unknown, slug?: string) {
     assertEdit(actor)
-    if (
-      actor.roles.includes('partner_editor') &&
-      !actor.roles.includes('editor') &&
-      kind !== 'initiative'
-    )
-      fail(403, 'Akses ditolak')
+    if (!isFullTeamEditor(actor) && kind !== 'initiative')
+      fail(403, 'Editor mitra hanya dapat membuat inisiatif')
     const body = contentBodySchema.parse(input)
     if (
       kind === 'page' &&
@@ -159,7 +162,8 @@ export class ContentService {
       reason,
       (record) => {
         const rev = record.revisions.at(-1)!
-        const reviewing = has(actor, 'reviewer') && actor.verified
+        const reviewing =
+          has(actor, 'reviewer') && actor.verified && !isAuditor(actor)
         if (action === 'submit') {
           assertEdit(actor, record)
           if (!['draft', 'changes_requested'].includes(rev.status))
@@ -172,6 +176,8 @@ export class ContentService {
             fail(422, 'Alasan revisi diperlukan')
           rev.status = 'changes_requested'
           rev.reviewerId = actor.id
+          rev.reviewNote = reason
+          rev.reviewedAt = new Date().toISOString()
         } else if (action === 'review') {
           if (!reviewing || rev.authorId === actor.id)
             fail(403, 'Reviewer harus berbeda dari penulis')
@@ -182,6 +188,8 @@ export class ContentService {
           rev.status = 'reviewed'
           rev.reviewerId = actor.id
           rev.checklist = checks
+          rev.reviewNote = reason ?? null
+          rev.reviewedAt = new Date().toISOString()
         } else if (action === 'publish') {
           if (!reviewing || rev.authorId === actor.id)
             fail(403, 'Reviewer harus berbeda dari penulis')
@@ -208,6 +216,8 @@ export class ContentService {
         } else if (action === 'archive') {
           if (!reviewing) fail(403, 'Akses ditolak')
           if (!reason) fail(422, 'Alasan arsip diperlukan')
+          rev.reviewNote = reason
+          rev.reviewedAt = new Date().toISOString()
           record.archived = true
           record.publishedRevisionId = null
         } else fail(422, 'Aksi tidak valid')
@@ -234,7 +244,7 @@ export class ContentService {
   async privateDetail(actor: Actor, id: string) {
     const record = await this.repo.get(id)
     if (!record) return fail(404, 'Konten tidak ditemukan')
-    if (!has(actor, 'reviewer', 'auditor', 'admin', 'editor'))
+    if (!has(actor, 'reviewer', 'admin', 'editor', 'auditor', 'operator'))
       assertEdit(actor, record)
     return record
   }
@@ -242,7 +252,14 @@ export class ContentService {
     actor: Actor,
     query: { page: number; kind?: ContentKind } = { page: 1 },
   ) {
-    const unrestricted = has(actor, 'reviewer', 'auditor', 'admin', 'editor')
+    const unrestricted = has(
+      actor,
+      'reviewer',
+      'admin',
+      'editor',
+      'auditor',
+      'operator',
+    )
     if (!unrestricted) assertEdit(actor)
     if (!unrestricted && query.kind && query.kind !== 'initiative')
       return { items: [], page: query.page, pages: 1, total: 0 }

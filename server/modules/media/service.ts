@@ -5,9 +5,9 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import sharp from 'sharp'
 import { createError } from 'h3'
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { database } from '../../db/client'
-import { assets, auditLogs } from '../../db/schema'
+import { assets, auditLogs, entities, revisions } from '../../db/schema'
 import type { Actor } from '../../../shared/contracts/content'
 const execute = promisify(execFile)
 export function mediaPath(key: string) {
@@ -55,12 +55,18 @@ export async function inspectMedia(data: Buffer) {
 }
 export async function upload(actor: Actor, data: Buffer) {
   if (
+    actor.roles.includes('auditor') ||
+    actor.roles.includes('operator') ||
     !actor.verified ||
     !actor.roles.some((r) =>
       ['editor', 'partner_editor', 'reviewer'].includes(r),
     )
   )
-    throw createError({ statusCode: 403 })
+    throw createError({
+      statusCode: 403,
+      statusMessage:
+        'Peran ini tidak dapat mengunggah media. Editor mitra hanya dapat mengunggah aset untuk organisasinya.',
+    })
   const meta = await inspectMedia(data),
     id = randomUUID(),
     key = id
@@ -125,6 +131,11 @@ export async function privateDownload(actor: Actor, id: string) {
     !actor.roles.some((r) => ['reviewer', 'admin', 'auditor'].includes(r))
   )
     throw createError({ statusCode: 403 })
+  if (actor.roles.includes('auditor'))
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Auditor bersifat baca saja',
+    })
   await database()
     .insert(auditLogs)
     .values({
@@ -137,4 +148,25 @@ export async function privateDownload(actor: Actor, id: string) {
       createdAt: new Date(),
     })
   return { data: await readFile(mediaPath(asset.key)), mime: asset.mime }
+}
+export async function assetUsage(id: string) {
+  const used = await database()
+    .select({
+      id: entities.id,
+      kind: entities.kind,
+      slug: entities.slug,
+      title: sql<string>`${revisions.body} ->> 'title'`,
+      status: entities.publishedRevisionId,
+    })
+    .from(revisions)
+    .innerJoin(entities, eq(revisions.entityId, entities.id))
+    .where(sql`${revisions.body} ->> 'imageId' = ${id}`)
+  const unique = new Map(used.map((row) => [row.id, row]))
+  return [...unique.values()].map((row) => ({
+    id: row.id,
+    kind: row.kind,
+    slug: row.slug,
+    title: row.title,
+    published: row.status !== null,
+  }))
 }

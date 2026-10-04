@@ -21,15 +21,17 @@ Website/CMS, database, penyimpanan media, audit, dan pekerjaan terjadwal adalah 
 | Publik/guest | Membaca published content, pencarian, share, membuka WhatsApp | Membuat donasi dan membaca status miliknya dengan bukti akses | Preview, data admin, data donor lain |
 | Donor terdaftar | Tidak diperlukan R1 | Riwayat milik sendiri, preferensi publikasi, permintaan privasi | Mengubah status pembayaran dan mengakses donor lain |
 | Editor tim | Membuat/revisi semua konten sesuai penugasan | Menyusun kampanye dan pembaruan | Menyetujui revisi sendiri, memposting uang |
-| Editor mitra terverifikasi | Membuat/revisi inisiatif milik organisasi | Menyusun kampanye organisasi | Publikasi sendiri, mengakses organisasi lain |
-| Reviewer tim | Memeriksa dan menerbitkan revisi pihak lain | Menyetujui kesiapan konten kampanye | Mengubah ledger atau menyalurkan dana |
-| Operator support | Konten publik, pengaturan kontak yang ditugaskan, tiket | Data transaksi minimum sesuai kasus | Memposting pembayaran, melihat dokumen verifikasi tanpa kebutuhan |
+| Editor mitra terverifikasi | Membuat/revisi inisiatif milik organisasi | Menyusun kampanye organisasi | Publikasi sendiri, mengakses organisasi lain, membuat program/cerita/halaman/FAQ, mengubah slug |
+| Reviewer tim | Memeriksa dan menerbitkan revisi pihak lain, menyetujui hak media, mengubah slug | Menyetujui kesiapan konten kampanye | Mengubah ledger atau menyalurkan dana, menerbitkan revisi yang belum ia setujui |
+| Operator support | Konten publik read only, mengusulkan dan menyetujui perubahan kontak yang diaudit | Data transaksi minimum sesuai kasus | Memposting pembayaran, melihat dokumen verifikasi tanpa kebutuhan, mengubah konten atau mengunggah media |
 | Finance maker | Tidak diperlukan R1 | Rekonsiliasi, usulan payout/refund, laporan internal | Menyetujui usul sendiri |
 | Finance checker | Tidak diperlukan R1 | Menyetujui usul maker lain | Menjalankan usul yang dibuat identitas sama |
-| Auditor | Read only audit sesuai izin | Laporan dan ledger read only | Mutation |
+| Auditor | Read only konten, media, dan audit sesuai izin | Laporan dan ledger read only | Mutation, termasuk unduhan media privat |
 | Admin sistem | Akun/peran, operasional dan konfigurasi yang diaudit | Konfigurasi integrasi yang dibatasi | Menjadi pengecualian otomatis terhadap dual approval |
 
-Hak akses diperiksa pada server dan ownership organisasi. Seorang pengguna dapat mempunyai beberapa role, tetapi aturan identitas berbeda untuk review/payout/refund tetap berlaku. Semua grant/revoke role dan perubahan kontak/gateway diaudit. Pemulihan darurat akun admin memerlukan prosedur dan dua penanggung jawab, bukan endpoint bypass publik.
+Hak akses diperiksa pada server dan ownership organisasi. Seorang pengguna dapat mempunyai beberapa role; bila satu role bersifat baca saja, larangan tetap berlaku meskipun digabung dengan role lain. Semua grant/revoke role dan perubahan kontak/gateway diaudit. Nilai sensitif pada audit log (nomor kontak, email, token pemulihan, id pengguna) disimpan sebagai penanda redaksi, bukan nilai asli. Pemulihan darurat akun admin memerlukan prosedur dan dua penanggung jawab, bukan endpoint bypass publik.
+
+Rantai persetujuan R1: editor mengajukan review, reviewer yang berbeda menyetujui review dan menerbitkan, editor dapat mengajukan ulang setelah permintaan revisi, dan reviewer yang menyetujui dapat mengarsipkan publikasi dengan alasan. Catatan reviewer beserta identitasnya tersimpan pada revisi sehingga penulis dapat membaca alasan perubahan.
 
 ## 3. Aturan bisnis bersama
 

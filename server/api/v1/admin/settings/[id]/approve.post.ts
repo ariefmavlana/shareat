@@ -17,9 +17,10 @@ import {
 } from '../../../../../db/schema'
 import { organizationSchema } from '../../../../../../shared/contracts/identity'
 import { contactSchema } from '../../../../../../shared/contracts/web'
+import { redact } from '../../../../../modules/audit/redact'
 export default api(async (event) => {
-  const actor = await requireAuth(event, true, ['admin'])
   const id = getRouterParam(event, 'id') ?? ''
+  const actor = await requireAuth(event, true, ['admin', 'operator'])
   return database().transaction(async (tx) => {
     await lockIdentityLifecycle(tx)
     const [row] = await tx
@@ -28,6 +29,10 @@ export default api(async (event) => {
       .where(eq(proposals.id, id))
       .for('update')
     if (!row || row.status !== 'pending') throw createError({ statusCode: 404 })
+    const isAdmin = actor.roles.includes('admin')
+    const operationalKinds = ['contact', 'organization']
+    if (!isAdmin && !(actor.roles.includes('operator') && operationalKinds.includes(row.kind)))
+      throw createError({ statusCode: 403, statusMessage: 'Akses ditolak' })
     if (row.makerId === actor.id)
       throw createError({
         statusCode: 403,
@@ -88,7 +93,7 @@ export default api(async (event) => {
       action: row.kind + '.approve',
       targetId: id,
       requestId: event.context.requestId,
-      safeChange: { kind: row.kind },
+      safeChange: redact({ kind: row.kind, payload: row.payload }),
       createdAt: new Date(),
     })
     return { ok: true, recoveryToken }

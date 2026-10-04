@@ -35,6 +35,8 @@ Opaque cookie256 bit disimpan sebagai hash DB. HttpOnly/SameSite=Lax/path/, Secu
 | GET `/sitemap.xml`, `/robots.txt` | URL approved; demo Disallow/noindex |
 | GET `/media/{id}/{width}.webp` | Width400/800/1200/1600; clean+rights+referenced published, selain itu404 |
 
+Endpoint publik hanya menerima GET. Permintaan non-GET ke `/api/v1/public/*`, `/api/health`, `/robots.txt`, dan `/sitemap.xml` dijawab405 dengan header `Allow: GET, HEAD` agar metode yang tidak didukung tidak dilaporkan sebagai404.
+
 Public DTO: id/kind/slug/title/summary/paragraphs/programSlug/location/activityStatus/responsible/schedule/author/effectiveDate/imageId/imageAlt/demo/sortOrder/updatedAt. Tidak ada organizationId/authorId/reviewerId/checklist/email/passwordHash/MFA/filekey. Production menyembunyikan demo. Plain text di-render escaped oleh Vue; tidak ada arbitrary HTML editor.
 
 ## Identitas
@@ -53,11 +55,11 @@ Tidak ada public signup, endpoint MFA terpisah, donor account, reset email, atau
 
 | Method/path | Kontrak |
 | --- | --- |
-| GET `/admin/content` | Auth, querypage1..10000/kind. SQL pagination20/latest revision; partner initiative/org dibatasi sebelum query |
-| POST `/admin/content` | Editor verified, `{kind,slug?,body}`, owner dari server; partner hanya initiative |
-| GET `/admin/content/{id}` | Team sesuai role atau partner owner, riwayat privat |
+| GET `/admin/content` | Auth, querypage1..10000/kind. SQL pagination20/latest revision; partner initiative/org dibatasi sebelum query; auditor dan operator dapat membaca tanpa mengubah |
+| POST `/admin/content` | Editor verified, `{kind,slug?,body}`, owner dari server; editor mitra hanya initiative, admin/editor untuk kind lain |
+| GET `/admin/content/{id}` | Team sesuai role atau partner owner, riwayat privat termasuk email penulis/peninjau |
 | PUT `/admin/content/{id}` | `{version,body}`, append draft, stale409 |
-| POST `/admin/content/{id}/transition` | `{version,action,checklist?,reason?}`; submit/request_changes/review/publish/archive. Reviewer bukan penulis; publisher reviewer yang menyetujui; archive wajib alasan |
+| POST `/admin/content/{id}/transition` | `{version,action,checklist?,reason?}`; submit/request_changes/review/publish/archive. Reviewer bukan penulis; publisher reviewer yang menyetujui; archive wajib alasan. Reason request_changes/archive tersimpan sebagai reviewNote beserta reviewerId dan reviewedAt |
 | POST `/admin/content/{id}/slug` | Reviewer verified, `{version,slug,reason}`, unique409 dan redirect satu hop |
 
 Body: title3..140, summary15..320, paragraphs1..30 (tiap1..4000); optional programSlug/location/responsible/schedule/author/effectiveDate/imageId/imageAlt; activityStatus defaultplanning; demo defaultfalse; sortOrder integer. Financial fields ditolak. Slug page memakai route sistem ditolak422; slug yang sudah menjadi alias atau unique conflict ditolak409. EffectiveDate ISO date, imageId UUID/alt≤200. Lima checklist claims/media/privacy/seo/contact harus true. Publish initiative memerlukan program published/responsible, story memerlukan author, privasi/ketentuan memerlukan effectiveDate. Media membutuhkan clean/rights/owner/alt. Reviewer tetap harus memeriksa bukti, bukan sekadar mencentang.
@@ -72,18 +74,18 @@ Contoh hanya fixture lokal. Publikasi demo ditolak dalam production.
 
 | Method/path | Role dan kontrak |
 | --- | --- |
-| GET `/admin/team` | Admin, private users/organizations tanpa password/MFA |
+| GET `/admin/team` | Admin; daftar user dan organisasi tanpa passwordHash/mfaCipher |
 | POST `/admin/team/organization` | Admin, name/slug/evidence privat, proposal belum mengaktifkan mitra |
 | POST `/admin/team/invite` | Admin, email/organizationId/roles; verified aktif, partner hanya partner_editor; token privat24 jam |
 | POST `/admin/team/suspend` | Admin, `{type:"user"|"organization",id,reason}`, revoke session terkait |
 | POST `/admin/team/recovery` | Admin, userId/reason≥20; maker/checker bukan target |
 | GET `/admin/settings` | Admin/operator, contact dan proposals privat |
 | POST `/admin/settings/contact` | Admin/operator, `{phone,hours,ownershipVerified:true}`; proposal/audit, belum mengubah publik |
-| POST `/admin/settings/{id}/approve` | Admin berbeda, lock proposal; contact version increment, organization verified, atau recovery suspend/token |
-| GET `/admin/audit` | Admin/auditor,100 terbaru read only; tanpa log mutation |
-| GET `/admin/media` | Auth scoped, metadata200 item maksimal; tanpa URL original publik |
-| POST `/admin/media` | Editor/partner/reviewer verified+CSRF, raw bytes, actual type, sha256, dimensions, scan status |
-| POST `/admin/media/{id}/approve` | Reviewer bukan uploader, rights reason≥20, scan clean wajib |
-| GET `/admin/media/{id}/download` | Owner atau team roles need-based, clean only, attachment/no-store, setiap request auth+audit |
+| POST `/admin/settings/{id}/approve` | Admin, atau operator untuk usulan contact/organization; penyetuju berbeda dari pengusul; lock proposal; contact version increment, organization verified, atau recovery suspend/token |
+| GET `/admin/audit` | Admin/auditor,100 terbaru read only; tanpa log mutation; nilai sensitif diredaksi |
+| GET `/admin/media` | Auth scoped, metadata200 item maksimal; reviewer/auditor lintas organisasi, editor mitra hanya organisasinya; menyertakan pemakaian konten dan email pengunggah; tanpa URL original publik |
+| POST `/admin/media` | Editor/partner/reviewer verified+CSRF, raw bytes, actual type, sha256, dimensions, scan status; auditor dan operator ditolak |
+| POST `/admin/media/{id}/approve` | Reviewer bukan uploader, rights reason≥20, scan clean wajib, auditor/operator ditolak |
+| GET `/admin/media/{id}/download` | Team roles need-based, clean only, attachment/no-store, setiap request auth+audit; auditor read only tidak mengunduh |
 
 Source schema pada handler adalah kontrak executable. Team/media/audit preview belum menjadi reporting skala besar; pagination tambahan, quota/retensi dan operasi ada pada [ledger](IMPLEMENTATION.md). [OPERATIONS](OPERATIONS.md) menjelaskan runbook. Tidak ada endpoint CRUD tambahan hanya karena tabel konseptual SDD pernah merencanakannya.
