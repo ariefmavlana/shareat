@@ -155,4 +155,94 @@ describe('Editorial policy', () => {
       ).rejects.toMatchObject({ statusCode: 422 })
     }
   })
+  it('keeps auditor and operator read-only on every content mutation', async () => {
+    const service = new ContentService(createMemoryRepository())
+    const item = await service.create(editor, 'initiative', body)
+    for (const roles of [['auditor'], ['operator'], ['auditor', 'editor']]) {
+      const actor = { ...editor, roles }
+      await expect(service.save(actor, item.id, 1, body)).rejects.toMatchObject(
+        { statusCode: 403 },
+      )
+      await expect(
+        service.create(actor, 'initiative', body),
+      ).rejects.toMatchObject({ statusCode: 403 })
+      await expect(
+        service.transition(actor, item.id, 1, 'submit'),
+      ).rejects.toMatchObject({ statusCode: 403 })
+    }
+  })
+  it('lets auditor and partner editors read, while operator stays out of content', async () => {
+    const service = new ContentService(createMemoryRepository())
+    const item = await service.create(editor, 'initiative', body)
+    for (const roles of [['auditor'], ['partner_editor']]) {
+      const reader =
+        roles[0] === 'partner_editor'
+          ? { ...editor, roles }
+          : { ...reviewer, roles }
+      expect((await service.privateDetail(reader, item.id)).id).toBe(item.id)
+      expect((await service.privateList(reader, { page: 1 })).total).toBe(1)
+    }
+    const operator = { ...editor, roles: ['operator'] }
+    await expect(
+      service.privateDetail(operator, item.id),
+    ).rejects.toMatchObject({ statusCode: 403 })
+    for (const roles of [['auditor'], ['operator']]) {
+      await expect(
+        service.transition({ ...reviewer, roles }, item.id, 1, 'submit'),
+      ).rejects.toMatchObject({ statusCode: 403 })
+    }
+  })
+  it('restricts partner editors to initiatives of their own organization', async () => {
+    const service = new ContentService(createMemoryRepository())
+    const partner = {
+      ...editor,
+      id: 'partner',
+      roles: ['partner_editor'],
+      organizationId: 'org',
+    }
+    await expect(
+      service.create(partner, 'program', body),
+    ).rejects.toMatchObject({ statusCode: 403 })
+    await expect(service.create(partner, 'story', body)).rejects.toMatchObject({
+      statusCode: 403,
+    })
+    await expect(service.create(partner, 'page', body)).rejects.toMatchObject({
+      statusCode: 403,
+    })
+    expect((await service.create(partner, 'initiative', body)).kind).toBe(
+      'initiative',
+    )
+  })
+  it('records the reviewer note and identity on request_changes for the author', async () => {
+    const service = new ContentService(createMemoryRepository())
+    const item = await service.create(editor, 'initiative', body)
+    await service.transition(editor, item.id, 1, 'submit')
+    await service.transition(
+      reviewer,
+      item.id,
+      2,
+      'request_changes',
+      undefined,
+      'Ringkasan perlu menyebut lokasi kegiatan.',
+    )
+    const detail = await service.privateDetail(editor, item.id)
+    const rev = detail.revisions.at(-1)!
+    expect(rev.status).toBe('changes_requested')
+    expect(rev.reviewNote).toBe('Ringkasan perlu menyebut lokasi kegiatan.')
+    expect(rev.reviewerId).toBe(reviewer.id)
+    expect(rev.reviewedAt).toBeTruthy()
+  })
+  it('only allows the reviewer who approved to publish', async () => {
+    const service = new ContentService(createMemoryRepository())
+    const other = { ...reviewer, id: 'reviewer-2' }
+    const item = await service.create(editor, 'initiative', body)
+    await service.transition(editor, item.id, 1, 'submit')
+    await service.transition(reviewer, item.id, 2, 'review', checklist)
+    await expect(
+      service.transition(other, item.id, 3, 'publish'),
+    ).rejects.toMatchObject({ statusCode: 409 })
+    await expect(
+      service.transition(reviewer, item.id, 3, 'publish'),
+    ).resolves.toBeTruthy()
+  })
 })

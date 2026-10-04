@@ -145,3 +145,39 @@ Validasi lokal source final:
 Temuan sampingan yang tidak diperbaiki pada tugas ini: `docs/tools/validate_docs.py` meregenerasi `docs/ASSET_INVENTORY.csv` dan menghapus kolom dimensi pada32 baris. Berkas tersebut dikembalikan ke revisi Git dan bug generatornya belum diperbaiki.
 
 Keterbatasan: pemeriksaan axe dijalankan pada Chromium headless dan bukan sertifikasi WCAG. Fokus yang terlihat, ukuran target sentuh, dan perilaku pembaca layar belum diuji manual. Uji perangkat iOS/Android fisik, screen reader nyata, zoom200%, dan riset dengan peserta belum dilakukan. Perubahan tidak menyentuh backend, schema, endpoint, media, maupun alur publikasi; tidak ada GitHub Actions, klaim kesiapan produksi, atau deployment publik.
+
+## Audit izin peran dan konsistensi R1, 4 Oktober 2026
+
+Audit menyeluruh atas peran SRS, endpoint admin, dan UI CMS menemukan celah otorisasi, inkonsistensi dokumentasi, dan satu cacat pelaporan error. Semua diperbaiki pada source.
+
+Perbaikan otorisasi:
+
+- Auditor sebelumnya lolos `assertEdit` karena hanya lima role pertama yang dikecualikan pada pemeriksaan baca, sehingga auditor bisa menulis konten bila ia mengajukan review sebagai penulis. Sekarang auditor dan operator baca-saja pada seluruh mutation konten dan tidak dapat dijadikan peninjau. Pemeriksaan juga berlaku bila role baca-saja digabung dengan role lain.
+- Auditor tetap dapat membaca daftar dan detail konten karena panel audit bekerja per entitas. Operator tidak diberi cakupan konten agar tetap least privilege: ia mengurus kontak dan usulan, bukan CMS.
+- Editor mitra sebelumnya hanya dibatasi pada `partner_editor`, sehingga `editor` atau `reviewer` yang digabungkan membuka akses ke seluruh organisasi. Sekarang `create` memakai aturan peran penuh, dan daftar media dibatasi ke organisasi pemilik untuk editor mitra.
+- Unggahan media dan perubahan slug menolak auditor dan operator dengan pesan yang jelas.
+- Operator tidak lagi memblokir dirinya sendiri: operator dapat mengusulkan sekaligus menyetujui perubahan kontak, tetapi tetap tidak boleh menyetujui usulan yang ia buat sendiri. Usulan recovery dan organisasi tetap eksklusif admin.
+- Endpoint media list memperbaiki select yang rusak; `scanStatus` dan `rightsStatus` kini benar-benar terkirim, dan setiap aset menyertakan pemakaian konten serta email pengunggah agar katalog media tidak lagi mengandalkan substitusi manual.
+
+Perbaikan data dan konsistensi:
+
+- Revisi menyimpan `reviewNote` dan `reviewedAt`. Alasan permintaan revisi dan arsip sebelumnya hanya masuk audit log, sehingga penulis tidak dapat mengetahui alasan perubahan. Sekarang alasan tersebut tersimpan pada revisi beserta identitas peninjau, dan halaman CMS menampilkannya.
+- `GET /admin/content/{id}` menyertakan email penulis dan peninjau agar aturan pemisahan identitas dapat dipahami operator, tanpa membocorkan cipher MFA.
+- `GET /admin/team` berhenti menyebarkan seluruh baris organisasi; kolom dibatasi eksplisit seperti halnya data pengguna.
+- Audit log meredaksi nomor kontak, email, token pemulihan, dan id pengguna pada usulan yang disetujui, sehingga auditor tidak lagi menerima nomor WhatsApp atau id pengguna mentah.
+- Error yang dibungkus transaksi PostgreSQL kehilangan status aslinya dan dilaporkan sebagai503. Wrapper API kini membaca rantai `cause` dan mengembalikan status asli, misalnya401 atau409. Sebelumnya kegagalan login yang seharusnya401 tampil sebagai503 dan menyesatkan operator.
+- Endpoint publik hanya menerima GET dan HEAD. Permintaan lain dijawab405 dengan header `Allow` melalui middleware, bukan404 yang menyamarkan metode yang salah.
+- Pesan error unggahan media kini menjelaskan peran yang ditolak.
+
+Dokumentasi diselaraskan: tabel peran SRS memuat larangan baca-saja, aturan peran gabungan, redaksi audit, dan rantai persetujuan R1; API.md memuat kontrak tujuan, role, serta guard405.
+
+Verifikasi pada artifact produksi yang dibangun ulang, DB compose dengan migrasi yang diterapkan:
+
+- `npm run lint`, `npm run typecheck`, `npm test`: lulus; unit test bertambah dari18 menjadi23 kasus untuk baca-saja auditor/operator, pembatasan kind editor mitra, dan pencatatan catatan review.
+- Skrip verifikasi peran (`.local/role-verify.mjs`) menjalankan akun admin, auditor, operator, dan editor mitra nyata terhadap server berjalan: 22/22 pemeriksaan lulus, mencakup baca, mutation yang ditolak, dan guard405. Termasuk penolakan operator pada cakupan konten403 karena least privilege.
+- Skrip alur editorial (`.local/flow-verify.mjs`) menjalankan rantai lengkap dengan empat akun: 14/14 lulus, termasuk penolakan self-review403, permintaan revisi yang terlihat penulis, penolakan publish oleh reviewer lain409, publish oleh reviewer penyetuju, arsip dengan alasan, status410 setelah arsip, dan penolakan operator menyetujui usulannya sendiri403.
+- Pemeriksaan navigasi per peran: editor melihat Konten dan Media; auditor melihat Konten, Media, dan Audit; operator melihat Konten, Media, dan Kontak; tidak ada role yang melihat menu di luar kewenangannya.
+- `npx playwright test tests/e2e/public.spec.ts` 3/3 dan axe15 halaman bersih pada build yang sama.
+- `docs/tools/validate_docs.py` kini mempertahankan nilai dimensi dari manifest yang sudah ada ketika Pillow tidak tersedia, sehingga inventaris tidak lagi kehilangan32 baris data; hasilnya0 structural error.
+
+Keterbatasan: skrip verifikasi peran dan alur berada di `.local/` yang diabaikan Git dan bukan suite CI, sehingga perlu dijalankan manual saat memeriksa perubahan izin. Akun uji dibuat dan dihapus dalam transaksi DB kerja. Uji perangkat, screen reader, dan audit keamanan eksternal tetap belum dilakukan.

@@ -14,6 +14,14 @@ export default api(async (event) => {
         suspended: users.suspended,
       })
       .from(users),
-    organizations: await database().select().from(organizations),
+    organizations: await database()
+      .select({
+        id: organizations.id,
+        name: organizations.name,
+        slug: organizations.slug,
+        verified: organizations.verified,
+        suspended: organizations.suspended,
+      })
+      .from(organizations),
   }
 })

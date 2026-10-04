@@ -10,6 +10,11 @@ const schema = z
   .strict()
 export default api(async (event) => {
   const actor = await requireAuth(event, true, ['reviewer'])
+  if (actor.roles.includes('auditor') || actor.roles.includes('operator'))
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Auditor dan operator bersifat baca saja',
+    })
   const data = await body(event, schema)
   const id = getRouterParam(event, 'id') ?? ''
   return database().transaction(async (tx) => {

@@ -84,6 +84,12 @@ export const revisions = pgTable(
       () => users.id,
     ),
     checklist: jsonb('checklist').$type<Checklist | null>(),
+    reviewNote: text('review_note'),
+    reviewedAt: timestamp('reviewed_at', {
+      mode: 'date',
+      precision: 3,
+      withTimezone: true,
+    }),
     createdAt: timestamp('created_at', {
       mode: 'date',
       precision: 3,

@@ -33,13 +33,19 @@ def dimensions(path: Path) -> tuple[str, str]:
 def inventory() -> int:
     media_extensions = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".woff", ".woff2", ".ttf", ".eot"}
     paths = sorted(p for p in (ROOT / "referensi" / "assets").rglob("*") if p.is_file() and p.suffix.lower() in media_extensions)
+    manifest = (DOCS / "ASSET_INVENTORY.csv").open("r", encoding="utf-8-sig", newline="")
+    with manifest as handle:
+        previous = {row["path"]: row for row in csv.DictReader(handle)}
     with (DOCS / "ASSET_INVENTORY.csv").open("w", encoding="utf-8-sig", newline="") as handle:
         writer = csv.writer(handle)
         writer.writerow(["path", "bytes", "width", "height", "sha256", "category", "rights_status"])
         for path in paths:
             relative = path.relative_to(ROOT).as_posix()
             category = "font_or_vector" if path.suffix.lower() in {".svg", ".woff", ".woff2", ".ttf", ".eot"} else "image_reference"
-            width, height = dimensions(path)
+            measured_width, measured_height = dimensions(path)
+            known = previous.get(relative) or {}
+            width = measured_width or known.get("width", "")
+            height = measured_height or known.get("height", "")
             writer.writerow([relative, path.stat().st_size, width, height, hashlib.sha256(path.read_bytes()).hexdigest(), category, "unverified"])
     return len(paths)
 

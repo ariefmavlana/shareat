@@ -12,6 +12,7 @@ import {
   redirects,
 } from '../../db/schema'
 import { publicDto } from './service'
+import { redact } from '../audit/redact'
 import type { ContentRepository } from './repository'
 import type { Actor, ContentRecord } from '../../../shared/contracts/content'
 type DB = ReturnType<typeof database>
@@ -31,6 +32,8 @@ async function hydrate(
     revisions: rs.map((r) => ({
       ...r,
       checklist: r.checklist ?? null,
+      reviewNote: r.reviewNote ?? null,
+      reviewedAt: r.reviewedAt ? r.reviewedAt.toISOString() : null,
       createdAt: r.createdAt.toISOString(),
     })),
   }
@@ -41,6 +44,7 @@ async function audit(
   action: string,
   targetId: string,
   reason?: string,
+  safeChange: Record<string, unknown> = {},
 ) {
   await tx.insert(auditLogs).values({
     id: randomUUID(),
@@ -49,18 +53,20 @@ async function audit(
     targetId,
     requestId: actor.requestId ?? randomUUID(),
     reason: reason ?? null,
-    safeChange: {},
+    safeChange: redact(safeChange),
     createdAt: new Date(),
   })
 }
 async function writeRevisions(tx: Executor, record: ContentRecord) {
-  for (const [index, rev] of record.revisions.entries())
+  for (const [index, rev] of record.revisions.entries()) {
+    const { reviewedAt, ...rest } = rev
     await tx
       .insert(revisions)
       .values({
-        ...rev,
+        ...rest,
         entityId: record.id,
         sequence: index + 1,
+        reviewedAt: reviewedAt ? new Date(reviewedAt) : null,
         createdAt: new Date(rev.createdAt),
       })
       .onConflictDoUpdate({
@@ -69,9 +75,12 @@ async function writeRevisions(tx: Executor, record: ContentRecord) {
           status: rev.status,
           reviewerId: rev.reviewerId,
           checklist: rev.checklist,
+          reviewNote: rev.reviewNote ?? null,
+          reviewedAt: reviewedAt ? new Date(reviewedAt) : null,
           createdAt: new Date(rev.createdAt),
         },
       })
+  }
 }
 export function postgresContentRepository(): ContentRepository {
   const db = database()
@@ -153,6 +162,10 @@ export function postgresContentRepository(): ContentRepository {
             {
               ...revision,
               checklist: revision.checklist ?? null,
+              reviewNote: revision.reviewNote ?? null,
+              reviewedAt: revision.reviewedAt
+                ? revision.reviewedAt.toISOString()
+                : null,
               createdAt: revision.createdAt.toISOString(),
             },
           ],
@@ -218,6 +231,10 @@ export function postgresContentRepository(): ContentRepository {
                 {
                   ...revision,
                   checklist: revision.checklist ?? null,
+                  reviewNote: revision.reviewNote ?? null,
+                  reviewedAt: revision.reviewedAt
+                    ? revision.reviewedAt.toISOString()
+                    : null,
                   createdAt: revision.createdAt.toISOString(),
                 },
               ],
@@ -248,6 +265,10 @@ export function postgresContentRepository(): ContentRepository {
               {
                 ...revision,
                 checklist: revision.checklist ?? null,
+                reviewNote: revision.reviewNote ?? null,
+                reviewedAt: revision.reviewedAt
+                  ? revision.reviewedAt.toISOString()
+                  : null,
                 createdAt: revision.createdAt.toISOString(),
               },
             ],

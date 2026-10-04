@@ -65,6 +65,8 @@ export interface Revision {
   authorId: string
   reviewerId: string | null
   checklist: Checklist | null
+  reviewNote?: string | null
+  reviewedAt?: string | null
   createdAt: string
 }
 export interface ContentRecord {
